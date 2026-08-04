@@ -1,0 +1,8 @@
+#Cache do python
+__pycache__/
+
+# Arquivos do Excel gerados
+Dados/Saida/
+
+# PDFs de entrada
+Dados/Entrada/
