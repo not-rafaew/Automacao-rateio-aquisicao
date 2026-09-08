@@ -113,7 +113,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
 #Fundo de Pintura
     resultado_fundo_de_pintura = re.search(
-        r"89\s+FUNDO DE PINTURA\s+(-?\d+,\d+)",
+        r"89\s+FUNDO DE PINTURA(?:\s+\d+/\d+)?\s+(-?\d+,\d+)",
         linha
     )
 

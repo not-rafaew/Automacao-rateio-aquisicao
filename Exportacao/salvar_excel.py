@@ -29,7 +29,7 @@ def salvar_excel(df, caminho_saida, totais_pdf=None):
 
         totais_calculados = {}
 
-        # Calcula somente as verbas existentes
+        # Calcula somente as verbas existentes   
         for verba in totais_pdf:
 
             if verba in df.columns:

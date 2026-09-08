@@ -12,6 +12,8 @@ def novo_apartamento():
 
      "Cota do Mes": None,
      "Agua" : None,
+     "Churrasqueira": None,
+     "Cota Extra": None,
      "Energia Area Comum" : None, 
      "Enxoval" : None,
      "Fundo de Reserva" : None,
@@ -36,6 +38,7 @@ def salvar_apartamento(apartamento, apartamentos):
 #Processa uma linha do PDF, identifica o tipo de informação
 #E preenche os dados do apartamento atual
 def processar_linha(linha, apartamento, apartamentos):
+
 
 #IDENTIFICANDO APARTAMENTO
     resultado = re.search(
@@ -113,7 +116,42 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
         return
-    
+
+#Churrasqueira
+    resultado_churrasqueira = re.search(
+        r"CHURRASQUEIRA.*?R\$\s*(-?[\d.]+,\d+)",
+        linha
+    )
+
+    if resultado_churrasqueira:
+        apartamento["Churrasqueira"] = converter_valor(
+            resultado_churrasqueira.group(1)
+        )
+
+        return
+
+#Cota Extra
+
+    resultado_cota_extra = re.search(
+        r"COTA EXTRA / RATEIO.*?R\$\s*(-?[\d.]+,\d+)",
+        linha
+    )
+
+    if resultado_cota_extra:
+
+        valor = converter_valor(
+            resultado_cota_extra.group(1)
+    )
+
+        apartamento["Cota Extra"] = valor
+
+        print(
+            "COTA EXTRA:",
+            apartamento["Unidade"],
+            valor
+        )
+
+        return
 
 #Fundo de Reserva
     resultado_fundo_de_reserva = re.search(
@@ -157,6 +195,8 @@ def extrair_duet(caminho_pdf):
     "Agua": 0,
     "Energia Area Comum": 0,
     "Enxoval": 0,
+    "Churrasqueira": 0,
+    "Cota Extra": 0,
     "Fundo de Reserva": 0,
     "Salao de Festas": 0,
     }
@@ -172,7 +212,8 @@ def extrair_duet(caminho_pdf):
 
             linhas = texto.splitlines()
 
-            for linha in linhas:
+            for i, linha in enumerate(linhas):
+
 
                 # Ao encontrar a seção de totais, para a leitura.
                 if "SOMA DAS VERBAS" in linha:
@@ -184,11 +225,24 @@ def extrair_duet(caminho_pdf):
                          linha,
                         totais_pdf
                     )
+                
+                else:
+                    # Caso especial da Cota Extra
+                    if "COTA EXTRA / RATEIO" in linha and i + 1 < len(linhas):
 
-                else: processar_linha(
+                         linha_cota_extra = linha + " " + linhas[i + 1]
+
+                         processar_linha(
+                            linha_cota_extra,
+                            apartamento,
+                            apartamentos
+                        )
+
+
+                    else: processar_linha(
                         linha,
                         apartamento,
-                        apartamentos
+                        apartamentos,
                     )
 
     salvar_apartamento(apartamento, apartamentos)
@@ -263,6 +317,32 @@ def processar_totais(linha, totais_pdf):
 
         return
     
+#Churrasqueira
+    resultado_churrasqueira = re.search(
+        r"CHURRASQUEIRA.*?R\$\s*(-?[\d.]+,\d+)",
+        linha
+    )
+
+    if resultado_churrasqueira:
+        totais_pdf["Churrasqueira"] = converter_valor(
+            resultado_churrasqueira.group(1)
+        )
+
+        return
+
+#Cota Extra
+    resultado_cota_extra = re.search(
+        r"PRINCIPAL\s*->\s*COTA EXTRA / RATEIO.*?R\$\s*(-?[\d.]+,\d+)",
+        linha
+    )
+
+    if resultado_cota_extra:
+        
+        totais_pdf["Cota Extra"] = converter_valor(
+            resultado_cota_extra.group(1)
+        )
+
+        return
 
 #Fundo de Reserva
     resultado_fundo_de_reserva = re.search(
