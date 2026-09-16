@@ -354,7 +354,6 @@ def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
 
-
 def processar_totais(linha, totais_pdf):
     #Cota do mes
     resultado_cota_do_mes = re.search(
