@@ -3,12 +3,13 @@ from Condominios.Ilhabela.ilhabela import extrair_ilhabela
 from Condominios.DuetBarra.duet_barra import extrair_duet
 from Condominios.Aurum.Aurum_v2 import extrair_aurum
 from Condominios.DezRamos.Dez_Ramos import extrair_dez_ramos
+from Condominios.GrandVille.GrandVille import extrair_grandville
 from Exportacao.salvar_excel import salvar_excel
 from pathlib import Path
 
 
-caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Dez Ramos\Dez_Ramos-Rateio-09.25.pdf"
-df, totais_pdf = extrair_dez_ramos(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\Downloads\48288.pdf"
+df, totais_pdf = extrair_grandville(caminho_pdf)
 
 #print("DATAFRAME:")
 #print(df)
@@ -16,7 +17,7 @@ df, totais_pdf = extrair_dez_ramos(caminho_pdf)
 #print("\nTOTAIS DO PDF:")
 #print(totais_pdf)
 
-caminho_saida = Path("Dados") / "Saida" / "Dez_Ramos" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Grand_Ville" / "Teste.xlsx"
 
 salvar_excel(
     df,
