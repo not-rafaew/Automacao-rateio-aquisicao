@@ -20,7 +20,8 @@ def novo_apartamento():
      "Seguro Cont Assis 24H" : None, 
      "Dif Doc Pago a Maior" :None,
      "Dif Doc Pago a Menor" :None,
-     "Tarifa Basica de Agua" : None, 
+     "Tarifa Basica de Agua" : None,
+     "Telhado": None,
      "Fundo Reserva" : None, 
      "Leitura de Água" : None,
      "Bonificacao Indevida" :None,
@@ -188,6 +189,16 @@ def processar_linha(linha, apartamento, apartamentos):
 
         return
 
+#Telhado
+    resultado_telhado = re.search(
+        r"1195\s+TELHADO(?:\s+\d+/\d+)?\s+(-?\d+,\d+)",
+        linha
+    )
+
+    if resultado_telhado:
+        apartamento["Telhado"] = converter_valor(resultado_telhado.group(1))
+
+        return
 
 #Fundo Reserva
     resultado_fundo_reserva = re.search(
@@ -272,6 +283,7 @@ def extrair_ilhabela(caminho_pdf):
     "Tarifa Basica de Agua" : 0, 
     "Fundo Reserva" : 0, 
     "Leitura de Água" : 0,
+    "Telhado": 0,
     "Bonificacao Indevida" :0,
     "Clube de Vantagens" : 0, 
     "Cameras" : 0,   
@@ -479,6 +491,17 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_tarifa_basica_de_agua:
         totais_pdf["Tarifa Basica de Agua"] = converter_valor(resultado_tarifa_basica_de_agua.group(1))
+
+        return
+
+#Telhado
+    resultado_telhado = re.search(
+        r"1195\s+TELHADO\s+(-?[\d\.]+,\d+)",
+        linha
+    )
+
+    if resultado_telhado:
+        totais_pdf["Telhado"] = converter_valor(resultado_telhado.group(1))
 
         return
 
