@@ -523,10 +523,3 @@ def processar_totais(linha, totais_pdf):
          totais_pdf["Copos Salao de Festas"] = converter_valor(resultado_copos_salao_de_festas.group(1))
 
          return
-
-
-
-
-
-
-

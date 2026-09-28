@@ -8,12 +8,13 @@ from Condominios.SierraAndorra.Sierra_Andorra import extrair_sierraandorra
 from Condominios.SolLife.Sol_Life import extrair_sollife
 from Condominios.Sol_Engenho.Sol_Engenho import extrair_soldoengenho
 from Condominios.Aleixo.Aleixo import extrair_aleixo
+from Condominios.Conviva.Conviva import extrair_conviva
 from Exportacao.salvar_excel import salvar_excel
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from pathlib import Path
 
-caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Aleixo\Aleixo-Rateio-09.26.pdf"
-df, totais_pdf = extrair_aleixo(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Conviva\Critica dos boletos Junho 2026 - Conviva Nova Iguaçu.pdf"
+df, totais_pdf = extrair_conviva(caminho_pdf)
 
 
 print("DATAFRAME:")
@@ -23,17 +24,17 @@ print("\nTOTAIS PDF:")
 print(totais_pdf)
 
 
-caminho_saida = Path("Dados") / "Saida" / "Aleixo" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Conviva" / "Teste.xlsx"
 
-#salvar_excel(
-#    df,
-#   caminho_saida,
-#    totais_pdf
-#)
-
-salvar_excel_aleixo(
+salvar_excel(
     df,
-    caminho_saida,
+   caminho_saida,
     totais_pdf
 )
+
+#salvar_excel_aleixo(
+#    df,
+#    caminho_saida,
+#    totais_pdf
+#)
 
