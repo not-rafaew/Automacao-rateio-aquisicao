@@ -1,8 +1,24 @@
-#Cache do python
+# Cache do Python
 __pycache__/
+*.pyc
 
 # Arquivos do Excel gerados
 Dados/Saida/
 
 # PDFs de entrada
 Dados/Entrada/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Ambiente virtual Python
+.venv/
+venv/
+
+# Arquivos temporários
+*.tmp
+
+# VS Code
+.vscode/

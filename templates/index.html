@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Automação de Condomínios</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="cabecalho">
+            <h1>Automação de Condomínios</h1>
+            <p>Selecione o condomínio para iniciar a extração</p>
+        </div>
+
+        <div class="card">
+            {% if erro %}
+                <div class="mensagem-erro">
+                    {{ erro }}
+                </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+
+                <div class="campo">
+                    <label for="condominio">Condomínio</label>
+
+                    <select id="condominio" name="condominio">
+                        <option value="">Selecione um condomínio</option>
+                        <option value="aleixo">Aleixo</option>
+                        <option value="aurum">Aurum</option>
+                        <option value="conviva">Conviva</option>
+                        <option value="dez_ramos">Dez Ramos</option>
+                        <option value="duet_barra">Duet Barra</option>
+                        <option value="grandville">Grand Ville</option>
+                        <option value="ilhabela">Ilhabela</option>
+                        <option value="marechal">Marechal</option>
+                        <option value="sierra_andorra">Sierra Andorra</option>
+                        <option value="sol_engenho">Sol do Engenho</option>
+                        <option value="sol_life">Sol Life</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+
+                    <label for="arquivo">Arquivo PDF</label>
+
+                    <input
+                        type="file"
+                        id="arquivo"
+                        name="arquivo"
+                        accept=".pdf"
+                    >
+                </div>
+
+                <button type="submit">
+                    Processar arquivo
+                </button>
+
+            </form>
+
+        </div>
+        
+    </main>
+
+</body>
+
+</html>
