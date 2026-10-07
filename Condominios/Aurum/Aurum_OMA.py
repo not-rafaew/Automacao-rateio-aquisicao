@@ -91,7 +91,7 @@ def processar_linha(elementos, apartamentos):
 
         apartamento = novo_apartamento()
 
-        apartamento["Bloco"] = "0"
+        apartamento["Bloco"] = "BLOCO"
         apartamento["Unidade"] = unidade
         apartamento["Vencimento"] = ""
 

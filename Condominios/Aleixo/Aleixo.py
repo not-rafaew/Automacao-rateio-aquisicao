@@ -6,18 +6,20 @@ import pandas as pd # Biblioteca para controlar planilhas em python.
 #-------------------------------------------------------------------------------------------------------#
 
 #Esses campos serão preenchidos conforme as informações forem encontradas no PDF.
-def novo_apartamento():
+def novo_apartamento(parcelas):
     return{
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
-     "Agua" : None,
-     "Emprestimo": None,
+     "Cota do mês": None,
      "Fundo de Reserva" : None,
-     "Taxa Extra ref. Emprestimo": None, 
-     "Taxa Extra Coluna de Agua": None,
-     "Cota Extra Laje": None,
+     "Água e Esgoto" : None,
+
+     f"Taxa Extra Ref. Empréstimo - {parcelas['emprestimo_60']}": None,
+     f"Taxa Extra Ref. Empréstimo - {parcelas['emprestimo_48']}": None,
+     f"Taxa Extra Ref. Substituição da Coluna de Água - {parcelas['coluna_agua']}": None,
+     f"Cota Extra Obra Reestru. Laje 406 - {parcelas['laje']}": None,
+
     }
 
 #-------------------------------------------------------------------------------------------------------#
@@ -33,8 +35,64 @@ def salvar_apartamento(apartamento, apartamentos):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
+def identificar_parcelas(texto):
 
-def processar_linha(linha, apartamento, apartamentos):
+    parcelas = {
+        "emprestimo_60": "",
+        "emprestimo_48": "",
+        "coluna_agua": "",
+        "laje": ""
+    }
+
+    resultado = re.search(
+        r"Taxa Extra ref\. Empréstimo.*?(\d+)/60",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        parcelas["emprestimo_60"] = (
+            f"{int(resultado.group(1)):02d}/60"
+        )
+
+    resultado = re.search(
+      r"Taxa Extra ref\. Empréstimo.*?(\d+)/48",  
+      texto,
+      re.IGNORECASE
+    )
+
+    if resultado:
+        parcelas["emprestimo_48"] = (
+            f"{int(resultado.group(1)):02d}/48"
+        )
+
+    resultado = re.search(
+       r"substitui[çc][aã]o da coluna de [áa]gua.*?(\d+)/(\d+)",
+       texto,
+       re.IGNORECASE | re.DOTALL 
+    )
+
+    if resultado:
+        parcelas["coluna_agua"] = (
+            f"{int(resultado.group(1)):02d}/"
+            f"{int(resultado.group(2)):02d}"  
+        )
+
+    resultado = re.search(
+        r"reestrutura[çc][aã]o da laje.*?(\d+)/(\d+)",
+        texto,
+        re.IGNORECASE | re.DOTALL
+    )
+
+    if resultado:
+        parcelas["laje"] = (
+          f"{int(resultado.group(1)):02d}/"
+          f"{int(resultado.group(2)):02d}"  
+        )
+
+    return parcelas
+
+def processar_linha(linha, apartamento, apartamentos, parcelas):
 
     #IDENTIFICANDO APARTAMENTO
     resultado = re.search(
@@ -46,9 +104,9 @@ def processar_linha(linha, apartamento, apartamentos):
         salvar_apartamento(apartamento, apartamentos)
 
         apartamento.clear()
-        apartamento.update(novo_apartamento())
+        apartamento.update(novo_apartamento(parcelas))
 
-        apartamento["Unidade"] = resultado.group(1)
+        apartamento["Unidade"] = f"APT-{resultado.group(1)}"
         apartamento["Vencimento"] = resultado.group(2)
 
     # Cota do Mes
@@ -63,10 +121,10 @@ def processar_linha(linha, apartamento, apartamentos):
             resultado_cota.group(1)
         )
 
-        if apartamento["Cota do Mes"] is None:
-            apartamento["Cota do Mes"] = valor
+        if apartamento["Cota do mês"] is None:
+            apartamento["Cota do mês"] = valor
         else:
-            apartamento["Cota do Mes"] += valor
+            apartamento["Cota do mês"] += valor
 
 
 
@@ -80,10 +138,10 @@ def processar_linha(linha, apartamento, apartamentos):
         if resultado_agua:
             valor = converter_valor(resultado_agua.group(1))
 
-            if apartamento["Agua"] is None:
-                apartamento["Agua"] = valor
+            if apartamento["Água e Esgoto"] is None:
+                apartamento["Água e Esgoto"] = valor
             else:
-                apartamento["Agua"] += valor
+                apartamento["Água e Esgoto"] += valor
 
 
     # Fundo de Reserva
@@ -102,7 +160,7 @@ def processar_linha(linha, apartamento, apartamentos):
                 apartamento["Fundo de Reserva"] += valor
 
 
-    # Taxa Extra ref. Empréstimo
+    # Taxa Extra Ref. Empréstimo - XX/6
     if "Taxa Extra ref. Empréstimo" in linha and re.search(r"\d+/60", linha):
         resultado_taxa_extra = re.search(
             r"(-?[\d\.]+,\d{2})$",
@@ -112,13 +170,17 @@ def processar_linha(linha, apartamento, apartamentos):
         if resultado_taxa_extra:
             valor = converter_valor(resultado_taxa_extra.group(1))
 
-            if apartamento["Taxa Extra ref. Emprestimo"] is None:
-                apartamento["Taxa Extra ref. Emprestimo"] = valor
+            nome_coluna = (
+                f"Taxa Extra Ref. Empréstimo - {parcelas['emprestimo_60']}"
+            )
+
+            if apartamento[nome_coluna] is None:
+                apartamento[nome_coluna] = valor
             else:
-                apartamento["Taxa Extra ref. Emprestimo"] += valor
+                apartamento[nome_coluna] += valor
 
 
-      # Taxa Extra ref. Empréstimo
+      # Taxa Extra Ref. Empréstimo - XX/48
     if "Taxa Extra ref. Empréstimo" in linha and re.search(r"\d+/48", linha):
         resultado_emprestimo = re.search(
             r"(-?[\d\.]+,\d{2})$",
@@ -128,10 +190,14 @@ def processar_linha(linha, apartamento, apartamentos):
         if resultado_emprestimo:
             valor = converter_valor(resultado_emprestimo.group(1))
 
-            if apartamento["Emprestimo"] is None:
-                apartamento["Emprestimo"] = valor
+            nome_coluna = (
+                f"Taxa Extra Ref. Empréstimo - {parcelas['emprestimo_48']}"
+            )
+
+            if apartamento[nome_coluna] is None:
+                apartamento[nome_coluna] = valor
             else:
-                apartamento["Emprestimo"] += valor
+                apartamento[nome_coluna] += valor
 
 #Taxa Extra Coluna Agua
     if "Taxa extra ref.substituiçao da coluna de água" in linha:
@@ -146,10 +212,15 @@ def processar_linha(linha, apartamento, apartamentos):
                 resultado_coluna_agua.group(1)
             )
 
-            if apartamento["Taxa Extra Coluna de Agua"] is None:
-                apartamento["Taxa Extra Coluna de Agua"] = valor
+            nome_coluna = (
+                f"Taxa Extra Ref. Substituição da Coluna de Água - "
+                f"{parcelas['coluna_agua']}"
+            )
+
+            if apartamento[nome_coluna] is None:
+                apartamento[nome_coluna] = valor
             else:
-                apartamento["Taxa Extra Coluna de Agua"] += valor
+                apartamento[nome_coluna] += valor
 
 
 #Cota Extra - Laje
@@ -165,155 +236,142 @@ def processar_linha(linha, apartamento, apartamentos):
                 resultado_cota_extra_laje.group(1)
             )
 
-            if apartamento["Cota Extra Laje"] is None:
-                apartamento["Cota Extra Laje"] = valor
+            nome_coluna = (
+                f"Cota Extra Obra Reestru. Laje 406 - "
+                f"{parcelas['laje']}"
+            )
+
+            if apartamento[nome_coluna] is None:
+                apartamento[nome_coluna] = valor
             else:
-                apartamento["Cota Extra Laje"] += valor
+                apartamento[nome_coluna] += valor
 
 
 def processar_totais(linha,totais_pdf):
 
-    # Cota do Mes
-    resultado_cota_do_mes = re.search(
-        r"1\.01\s*-\s*Cotas Condominiais.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
+    #Cota do mes
+    if " - Cotas Condominiais " in linha:
 
-    if resultado_cota_do_mes:
-
-        valor = converter_valor(
-            resultado_cota_do_mes.group(1)
+        resultado = re.search(
+           r"(-?[\d\.]+,\d{2})$", 
+           linha
         )
 
-        totais_pdf["Cota do Mes"] = valor
+        if resultado:
+            totais_pdf["Cota do mês"] = converter_valor(
+                resultado.group(1)
+            )
 
-        return
+    #Agua e esgoto
+    if " - Água " in linha:
 
-
-    # Agua
-    resultado_agua = re.search(
-        r"1\.10\s*-\s*Água.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
-
-    if resultado_agua:
-
-        valor = converter_valor(
-            resultado_agua.group(1)
+        resultado = re.search(
+           r"(-?[\d\.]+,\d{2})$",
+           linha 
         )
 
-        totais_pdf["Agua"] = valor
+        if resultado:
+           totais_pdf["Água e Esgoto"] = converter_valor(
+                resultado.group(1)
+           )
 
-        return
+    # Emprestimos /48
+    if " - Emprestimo " in linha:
+
+        resultado = re.search(
+            r"(-?[\d\.]+,\d{2})$",
+            linha
+        )
+
+        if resultado:
+            totais_pdf["Emprestimo"] = converter_valor(
+                resultado.group(1)
+            )
 
     # Fundo de Reserva
-    resultado_fundo = re.search(
-        r"1\.13\s*-\s*Fundo de Reserva.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
+    if " - Fundo de Reserva " in linha:
 
-    if resultado_fundo:
-
-        valor = converter_valor(
-            resultado_fundo.group(1)
+        resultado = re.search(
+           r"(-?[\d\.]+,\d{2})$",
+           linha 
         )
 
-        totais_pdf["Fundo de Reserva"] = valor
+        if resultado:
+           totais_pdf["Fundo de Reserva"] = converter_valor(
+                resultado.group(1)
+            )
 
-        return
+    # Emprestimos /60
+    if  " - Taxa Extra ref. Empréstimo " in linha:
 
-
-    # Taxa Extra ref. Empréstimo
-    resultado_taxa_extra = re.search(
-        r"1\.21\s*-\s*Taxa Extra ref\. Empréstimo.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
-
-    if resultado_taxa_extra:
-
-        valor = converter_valor(
-            resultado_taxa_extra.group(1)
+        resultado = re.search(
+          r"(-?[\d\.]+,\d{2})$",
+          linha  
         )
 
-        totais_pdf["Taxa Extra ref. Emprestimo"] = valor
+        if resultado:
+            totais_pdf["Taxa Extra Ref. Empréstimo"] = converter_valor(
+                resultado.group(1)
+            )
 
-        return
+    # Cota extra consolidada
+    if " - Cota Extra " in linha:
 
-
-    #Emprestimo
-    resultado_emprestimo = re.search(
-        r"1\.1004\s*-\s*Emprestimo.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
-
-    if resultado_emprestimo:
-
-        valor = converter_valor(
-            resultado_emprestimo.group(1)
+        resultado = re.search(
+           r"(-?[\d\.]+,\d{2})$",
+           linha 
         )
 
-        totais_pdf["Emprestimo"] = valor
-
-        return
-
-
-    #Cota Extra
-    resultado_cota_extra = re.search(
-        r"1\.56\s*-\s*Cota Extra.*?(-?[\d\.]+,\d{2})$",
-        linha
-    )
-
-    if resultado_cota_extra:
-
-        valor = converter_valor(
-            resultado_cota_extra.group(1)
-        )
-
-        totais_pdf["Cota Extra"] = valor
-
-        return
+        if resultado:
+          totais_pdf["Cota Extra"] = converter_valor(
+                resultado.group(1)
+            )
 
 
 def extrair_aleixo(caminho_pdf):
 
+    
     apartamentos = []
-    apartamento = novo_apartamento()
 
-    totais_pdf = {
-        "Cota do Mes": 0,
-        "Agua": 0,
-        "Emprestimo": 0,
-        "Fundo de Reserva": 0,
-        "Taxa Extra ref. Emprestimo": 0,
-        "Cota Extra": 0
-    }
+    totais_pdf = {}
 
     with pdfplumber.open(caminho_pdf) as pdf:
+
+        texto_completo = ""
 
         for pagina in pdf.pages:
 
             texto = pagina.extract_text() or ""
+            texto_completo += texto + "\n"
 
-            for linha in texto.splitlines():
+        parcelas = identificar_parcelas(texto_completo)
+
+        print("\nPARCELAS ENCONTRADAS:")
+        print(parcelas)
+
+        apartamento = novo_apartamento(parcelas)
+
+        for linha in texto_completo.splitlines():
 
 
-                processar_linha(
-                    linha,
-                    apartamento,
-                    apartamentos
-                )
+            processar_linha(
+                linha,
+                apartamento,
+                apartamentos,
+                parcelas
+            )
 
-                processar_totais(
-                    linha,
-                    totais_pdf
-                )
+            processar_totais(
+                linha,
+                totais_pdf
+            )
 
     salvar_apartamento(
         apartamento,
         apartamentos
     )
 
+
     df = pd.DataFrame(apartamentos)
 
     return df, totais_pdf
-

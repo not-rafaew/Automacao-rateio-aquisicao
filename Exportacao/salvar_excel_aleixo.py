@@ -30,21 +30,86 @@ def salvar_excel_aleixo(df, caminho_saida, totais_pdf=None):
             # Regra especifica do Aleixo
             if verba == "Cota Extra":
 
-                total_coluna_agua = (
-                    df["Taxa Extra Coluna de Agua"]
-                    .fillna(0)
-                    .sum()
+                coluna_agua = next(
+                    (
+                        coluna for coluna in df.columns
+                        if coluna.startswith(
+                           "Taxa Extra Ref. Substituição da Coluna de Água - "
+                        )
+                    ),
+                    None
                 )
 
-                total_laje = (
-                    df["Cota Extra Laje"]
-                    .fillna(0)
-                    .sum()
+                coluna_laje = next(
+                    (
+                        coluna for coluna in df.columns
+                        if coluna.startswith(
+                            "Cota Extra Obra Reestru. Laje 406 - "
+                        )
+                    ),
+                    None
+                )
+
+                total_coluna_agua = 0
+                total_laje = 0
+
+                if coluna_agua is not None:
+                    total_coluna_agua = (
+                        df[coluna_agua]
+                        .fillna(0)
+                        .sum()
+                    )
+
+                if coluna_laje is not None:
+                    total_laje = (
+                        df[coluna_laje]
+                        .fillna(0)
+                        .sum()
                 )
 
                 totais_calculados["Cota Extra"] = (
                     total_coluna_agua + total_laje
                 )
+
+            elif verba == "Taxa Extra Ref. Empréstimo":
+
+                coluna_60 = next(
+                    (
+                        coluna for coluna in df.columns
+                        if coluna.startswith(
+                            "Taxa Extra Ref. Empréstimo - "
+                        )
+                        and coluna.endswith("/60")
+                    ),
+                    None
+                )
+
+                if coluna_60 is not None:
+                    totais_calculados[verba] = (
+                        df[coluna_60]
+                        .fillna(0)
+                        .sum()
+                    )
+
+            elif verba == "Emprestimo":
+
+                coluna_48 = next(
+                    (
+                        coluna for coluna in df.columns
+                        if coluna.startswith(
+                            "Taxa Extra Ref. Empréstimo - "
+                        )
+                        and coluna.endswith("/48")
+                    ),
+                    None
+                )
+
+                if coluna_48 is not None:
+                    totais_calculados[verba] = (
+                        df[coluna_48]
+                        .fillna(0)
+                        .sum()
+                    )        
 
             elif verba in df.columns:
 
@@ -74,7 +139,32 @@ def salvar_excel_aleixo(df, caminho_saida, totais_pdf=None):
     df = df.fillna("")
 
     # Remove colunas totalmente vazias
-    df = df.loc[:, (df != "").any()]
+    colunas_obrigatorias = [
+        "Bloco",
+        "Unidade",
+        "Vencimento",
+        "Competencia",
+        "DescontoPontualidade",
+        "Valor Negociado",
+        "Livre2",
+        "Livre3",
+        "Livre4",
+        "Livre5",
+        "Cota do mês",
+    ]
+
+    # Remove colunas vazias que não são obrigatorias
+    colunas_manter = []
+
+    for coluna in df.columns:
+
+        if coluna in colunas_obrigatorias:
+            colunas_manter.append(coluna)
+
+        elif (df[coluna] != "").any():
+            colunas_manter.append(coluna)
+
+    df = df[colunas_manter]
 
     # Exporta para Excel
     df.to_excel(caminho_saida, index=False)

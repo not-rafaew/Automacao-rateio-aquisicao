@@ -55,7 +55,33 @@ def salvar_excel(df, caminho_saida, totais_pdf=None):
     df = df.fillna("")
 
     # Remove colunas totalmente vazias
-    df = df.loc[:, (df != "").any()]
+    colunas_obrigatorias = [
+        "Bloco",
+        "Unidade",
+        "Vencimento",
+        "Competencia",
+        "DescontoPontualidade",
+        "Valor Negociado",
+        "Livre2",
+        "Livre3",
+        "Livre3",
+        "Livre4",
+        "Livre5",
+        "Cota do Mes",
+    ]
+
+    # Remove colunas vazias que não são obrigatorias
+    colunas_manter = []
+
+    for coluna in df.columns:
+
+        if coluna in colunas_obrigatorias:
+            colunas_manter.append(coluna)
+
+        elif (df[coluna] != "").any():
+            colunas_manter.append(coluna)
+
+    df = df[colunas_manter]
 
     # Exporta para Excel
     df.to_excel(caminho_saida, index=False)

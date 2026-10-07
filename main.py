@@ -11,12 +11,23 @@ from Condominios.Sol_Engenho.Sol_Engenho import extrair_soldoengenho
 from Condominios.Aleixo.Aleixo import extrair_aleixo
 from Condominios.Conviva.Conviva import extrair_conviva
 from Exportacao.salvar_excel import salvar_excel
+from Exportacao.layout_revo import montar_layout_revo
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from pathlib import Path
 
-caminho_pdf = r"C:\Users\guug0\Downloads\2427-QUADRO DE RATEIO.pdf"
-df, totais_pdf = extrair_aurum_oma(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Aleixo\Aleixo-Rateio-10.26.pdf"
+df, totais_pdf = extrair_aleixo(caminho_pdf)
 
+df_revo = montar_layout_revo(
+    df,
+    "07/2026"
+)
+
+print("\nCOLUNAS DO DF ORIGINAL:")
+print(df.columns.tolist())
+
+print("\nCOLUNAS DO DF REVO:")
+print(df_revo.columns.tolist())
 
 print("DATAFRAME:")
 print(df)
@@ -25,17 +36,17 @@ print("\nTOTAIS PDF:")
 print(totais_pdf)
 
 
-caminho_saida = Path("Dados") / "Saida" / "Aurum" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Aleixo" / "Teste.xlsx"
 
-salvar_excel(
-   df,
-   caminho_saida,
-   totais_pdf
-)
-
-#salvar_excel_aleixo(
-#    df,
-#    caminho_saida,
-#    totais_pdf
+#salvar_excel(
+#   df_revo,
+#   caminho_saida,
+#   totais_pdf
 #)
+
+salvar_excel_aleixo(
+    df_revo,
+    caminho_saida,
+    totais_pdf
+)
 
