@@ -13,15 +13,12 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "",
 
-     "Cota do Mes": None,
-     "Agua": None,
-     "Consumo de Energia Eletrica" : None,
-     "Fundo de Reserva" : None, 
-     "Consumo de Gas" : None,
-     "Multa Regulamento Interno" : None,
-     "Reembolsos Diversos" : None, 
-     "Salão de Festas" : None, 
+     "Cota do mês": None,
+     "Fundo Reserva" : None,
+     "Energia Elétrica" : None,
+     "Água": None,
      "Espaço Gourmet": None,
+     "Consumo de Gás" : None,
     }
 
 def converter_valor(valor):
@@ -95,12 +92,12 @@ def processar_linha(elementos, apartamentos):
         apartamento["Unidade"] = unidade
         apartamento["Vencimento"] = ""
 
-        apartamento["Cota do Mes"] = cota_mes
-        apartamento["Fundo de Reserva"] = fundo_reserva
-        apartamento["Consumo de Energia Eletrica"] = energia
-        apartamento["Agua"] = agua
+        apartamento["Cota do mês"] = cota_mes
+        apartamento["Fundo Reserva"] = fundo_reserva
+        apartamento["Energia Elétrica"] = energia
+        apartamento["Água"] = agua
         apartamento["Espaço Gourmet"] = espaco_gourmet
-        apartamento["Consumo de Gas"] = gas
+        apartamento["Consumo de Gás"] = gas
 
         apartamentos.append(apartamento)
 
@@ -108,12 +105,12 @@ def processar_linha(elementos, apartamentos):
 def processar_totais(elementos):
 
     totais_pdf = {
-        "Cota do Mes": 0,
-        "Fundo de Reserva": 0,
-        "Consumo de Energia Eletrica": 0,
-        "Agua": 0,
+        "Cota do mês": 0,
+        "Fundo Reserva": 0,
+        "Energia Elétrica": 0,
+        "Água": 0,
         "Espaço Gourmet": 0,
-        "Consumo de Gas": 0,
+        "Consumo de Gás": 0,
     }
 
     for elemento in elementos:
@@ -127,22 +124,22 @@ def processar_totais(elementos):
             texto = texto[:-1]
 
         if 1900 <= left < 2150:
-            totais_pdf["Cota do Mes"] = converter_valor(texto)
+            totais_pdf["Cota do mês"] = converter_valor(texto)
 
         elif 2150 <= left < 2450:
-            totais_pdf["Fundo de Reserva"] = converter_valor(texto)
+            totais_pdf["Fundo Reserva"] = converter_valor(texto)
 
         elif 2450 <= left < 2700:
-            totais_pdf["Consumo de Energia Eletrica"] = converter_valor(texto)
+            totais_pdf["Energia Elétrica"] = converter_valor(texto)
 
         elif 2700 <= left < 2950:
-            totais_pdf["Agua"] = converter_valor(texto)
+            totais_pdf["Água"] = converter_valor(texto)
 
         elif 2950 <= left < 3200:
-           totais_pdf["Espaço Gourmet"] = converter_valor(texto)
+            totais_pdf["Espaço Gourmet"] = converter_valor(texto)
 
         elif left >= 3200:
-           totais_pdf["Consumo de Gas"] = converter_valor(texto)
+            totais_pdf["Consumo de Gás"] = converter_valor(texto)
 
     return totais_pdf
 
@@ -235,15 +232,12 @@ def extrair_aurum_oma(caminho_pdf):
     print()
     print("TOTAIS EXTRAÍDOS:")
 
-    print("Cota do Mes:", df["Cota do Mes"].sum())
-    print("Fundo dee Reserva:", df["Fundo de Reserva"].sum())
-    print(
-        "Energia:",
-        df["Consumo de Energia Eletrica"].sum()
-    )
-    print("Agua:", df["Agua"].sum())
+    print("Cota do mês:", df["Cota do mês"].sum())
+    print("Fundo Reserva:", df["Fundo Reserva"].sum())
+    print("Energia Elétrica:", df["Energia Elétrica"].sum())
+    print("Água:", df["Água"].sum())
     print("Espaço Gourmet:", df["Espaço Gourmet"].sum())
-    print("Gas:", round(df["Consumo de Gas"].sum(), 2))
+    print("Consumo de Gás:", round(df["Consumo de Gás"].sum(), 2))
 
     pdf.close
         

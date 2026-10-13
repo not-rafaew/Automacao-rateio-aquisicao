@@ -9,7 +9,7 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "",
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
      "Rateio Extra": None,
      "Fundo de Reserva" : None,
      "Gas" : None, 
@@ -33,7 +33,7 @@ def identificar_verbas(linha):
     nomes_pdf = {
         "Rateio Extra": "Rateio Extra",
         "Fundo de Reserva": "Fundo de Reserva",
-        "Condomínio": "Cota do Mes",
+        "Condomínio": "Cota do mês",
         "Gás": "Gas"
     }
 
@@ -84,7 +84,7 @@ def processar_linha(linha, apartamentos, verbas_ativas):
     apartamento = novo_apartamento()
 
     apartamento["Unidade"] = resultado.group(1)
-    apartamento["Bloco"] = resultado.group(2)
+    apartamento["Bloco"] = f"Bloco {resultado.group(2)}"
     apartamento["Vencimento"] = resultado.group(3)
 
     for indice, verba in enumerate(verbas_ativas):
@@ -131,7 +131,7 @@ def extrair_conviva(caminho_pdf):
     verbas_ativas = []
 
     totais_pdf = {
-        "Cota do Mes": 0,
+        "Cota do mês": 0,
         "Rateio Extra": 0,
         "Fundo de Reserva": 0,
         "Gas": 0,

@@ -15,8 +15,8 @@ from Exportacao.layout_revo import montar_layout_revo
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from pathlib import Path
 
-caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Aleixo\Aleixo-Rateio-10.26.pdf"
-df, totais_pdf = extrair_aleixo(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Dez Ramos\Dez_Ramos-Rateio-12.25.pdf"
+df, totais_pdf = extrair_dez_ramos(caminho_pdf)
 
 df_revo = montar_layout_revo(
     df,
@@ -36,17 +36,17 @@ print("\nTOTAIS PDF:")
 print(totais_pdf)
 
 
-caminho_saida = Path("Dados") / "Saida" / "Aleixo" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Dez_Ramos" / "Teste.xlsx"
 
-#salvar_excel(
-#   df_revo,
-#   caminho_saida,
-#   totais_pdf
-#)
-
-salvar_excel_aleixo(
-    df_revo,
-    caminho_saida,
-    totais_pdf
+salvar_excel(
+   df_revo,
+   caminho_saida,
+   totais_pdf
 )
+
+#salvar_excel_aleixo(
+#    df_revo,
+#    caminho_saida,
+#    totais_pdf
+#)
 

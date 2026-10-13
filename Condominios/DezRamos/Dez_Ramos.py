@@ -6,19 +6,20 @@ import pandas as pd # Biblioteca para controlar planilhas em python.
 #-------------------------------------------------------------------------------------------------------#
 
 #Esses campos serão preenchidos conforme as informações forem encontradas no PDF.
-def novo_apartamento():
+def novo_apartamento(parcela_projeto_solar):
     return{
      "Bloco" : "", #Salva o bloco.
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
-     "Agua-Esgoto" : None,
-     "Energia" : None, 
+     "Cota do mês": None,
+     "Energia" : None,
+     "Água-Esgoto" : None, 
      "Fundo de Reserva" : None,
      "Cota Extra": None,
      "Segurança Externa" : None, 
-     "Instalação - Projeto Solar" : None,     
+     f"Instalação - Projeto Solar - {parcela_projeto_solar}": None,
+
     }
 
 #-------------------------------------------------------------------------------------------------------#
@@ -43,7 +44,7 @@ def salvar_apartamento(apartamento, apartamentos):
 
 #-------------------------------------------------------------------------------------------------------#
 
-def processar_linha(linha, apartamento, apartamentos):
+def processar_linha(linha, apartamento, apartamentos, parcela_projeto_solar):
 
     if (
         "BL01-AP0105" in linha
@@ -68,10 +69,12 @@ def processar_linha(linha, apartamento, apartamentos):
         salvar_apartamento(apartamento, apartamentos)
 
         apartamento.clear()
-        apartamento.update(novo_apartamento())
+        apartamento.update(novo_apartamento(parcela_projeto_solar))
 
-        apartamento["Bloco"] = resultado.group(1)
-        apartamento["Unidade"] = resultado.group(2)
+        apartamento["Bloco"] = f"Bloco {resultado.group(1)}"
+        apartamento["Unidade"] = (
+           f"BL{resultado.group(1)}-AP{resultado.group(2)}" 
+        )
         apartamento["Vencimento"] = resultado.group(3)
 
 
@@ -86,7 +89,7 @@ def processar_linha(linha, apartamento, apartamentos):
                 resultado_cota_do_mes.group(1)
             )
 
-            apartamento["Cota do Mes"] = valor
+            apartamento["Cota do mês"] = valor
 
 
         # Projeto Solar
@@ -101,7 +104,14 @@ def processar_linha(linha, apartamento, apartamentos):
                 resultado_projeto_solar.group(1)
             )
 
-            apartamento["Instalação - Projeto Solar"] = valor
+            nome_coluna_projeto_solar = (
+               f"Instalação - Projeto Solar - {parcela_projeto_solar}" 
+            )
+
+
+            apartamento[nome_coluna_projeto_solar] = valor
+
+            return
 
        
 
@@ -142,7 +152,7 @@ def processar_linha(linha, apartamento, apartamentos):
             resultado_cota_do_mes.group(1)
         )
 
-        apartamento["Cota do Mes"] = valor
+        apartamento["Cota do mês"] = valor
 
         return
 
@@ -159,7 +169,7 @@ def processar_linha(linha, apartamento, apartamentos):
             resultado_agua_esgoto.group(1)
         )
     
-        apartamento["Agua-Esgoto"] = valor
+        apartamento["Água-Esgoto"] = valor
 
         return
 
@@ -283,6 +293,10 @@ def processar_linha(linha, apartamento, apartamentos):
             resultado_projeto_solar.group(1)
         )
 
+        nome_coluna_projeto_solar = (
+            f"Instalação - Projeto Solar - {parcela_projeto_solar}"
+        )
+
         apartamento["Instalação - Projeto Solar"] = valor
 
         return
@@ -290,43 +304,52 @@ def processar_linha(linha, apartamento, apartamentos):
 def extrair_dez_ramos(caminho_pdf):
 
     apartamentos = []
-    apartamento = novo_apartamento()
 
     totais_pdf = {
-    "Cota do Mes": 0,
-    "Agua-Esgoto" : 0,
+    "Cota do mês": 0,
+    "Água-Esgoto" : 0,
     "Energia" : 0, 
     "Fundo de Reserva" : 0,
     "Cota Extra": 0,
     "Segurança Externa" : 0, 
-    "Instalação - Projeto Solar" : 0, 
     }
 
     with pdfplumber.open(caminho_pdf) as pdf:
 
+        texto_completo = ""
+
         for pagina in pdf.pages:
 
             texto = pagina.extract_text() or ""
+            texto_completo += texto + "\n"
 
-            for linha in texto.splitlines():
+        parcela_projeto_solar = identificar_parcela_projeto_solar(
+            texto_completo
+        )
+
+        print("\nPARCELA PROJETO SOLAR:")
+        print(parcela_projeto_solar)
+
+        nome_coluna_projeto_solar = (
+            f"Instalação - Projeto Solar - {parcela_projeto_solar}"
+        )
+
+        totais_pdf[nome_coluna_projeto_solar] = 0
+
+        apartamento = novo_apartamento(parcela_projeto_solar)
+
+        for linha in texto_completo.splitlines():
 
                 processar_linha(
                     linha,
                     apartamento,
-                    apartamentos
+                    apartamentos,
+                    parcela_projeto_solar
                 )
 
-                if apartamento.get("Unidade") == "0109":
-                    print(
-                        "DEBUG 0109:",
-                        repr(linha)
-                    )
-
-                # Processa apenas as linhas do Resumo Contabil
                 if re.match(r"1\.\d+\s+-", linha):
                     processar_totais(
-                        linha,
-                        totais_pdf
+                        linha, totais_pdf, nome_coluna_projeto_solar
                     )
 
     salvar_apartamento(apartamento, apartamentos)
@@ -340,13 +363,14 @@ def extrair_dez_ramos(caminho_pdf):
 
     print(df[
         [
-            "Cota do Mes",
-            "Agua-Esgoto",
+            "Cota do mês",
+            "Água-Esgoto",
             "Energia",
             "Fundo de Reserva",
             "Cota Extra",
             "Segurança Externa",
-            "Instalação - Projeto Solar"
+            nome_coluna_projeto_solar
+            
         ]
     ].count())
 
@@ -355,13 +379,13 @@ def extrair_dez_ramos(caminho_pdf):
 
     print(df[
         [
-            "Cota do Mes",
-            "Agua-Esgoto",
+            "Cota do mês",
+            "Água-Esgoto",
             "Energia",
             "Fundo de Reserva",
             "Cota Extra",
             "Segurança Externa",
-            "Instalação - Projeto Solar"
+            nome_coluna_projeto_solar
         ]
     ].sum())
 
@@ -371,7 +395,25 @@ def extrair_dez_ramos(caminho_pdf):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
-def processar_totais(linha, totais_pdf):
+def identificar_parcela_projeto_solar(texto):
+
+    resultado = re.search(
+        r"Instalação - Projeto Solar\s+(\d+)/(\d+)",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        parcela = (
+            f"{int(resultado.group(1)):02d}/"
+            f"{int(resultado.group(2)):02d}"
+        )
+
+        return parcela
+
+    return ""
+
+def processar_totais(linha, totais_pdf, nome_coluna_projeto_solar):
 
     # Cota do Mes
     resultado_cota_do_mes = re.search(
@@ -385,7 +427,7 @@ def processar_totais(linha, totais_pdf):
             resultado_cota_do_mes.group(1)
         )
 
-        totais_pdf["Cota do Mes"] = valor
+        totais_pdf["Cota do mês"] = valor
 
         return
 
@@ -402,7 +444,7 @@ def processar_totais(linha, totais_pdf):
             resultado_agua_esgoto.group(1)
         )
     
-        totais_pdf["Agua-Esgoto"] = valor
+        totais_pdf["Água-Esgoto"] = valor
 
         return
 
@@ -483,6 +525,6 @@ def processar_totais(linha, totais_pdf):
             resultado_instalacao_projeto_solar.group(1)
         )
 
-        totais_pdf["Instalação - Projeto Solar"] = valor
+        totais_pdf[nome_coluna_projeto_solar] = valor
 
         return
