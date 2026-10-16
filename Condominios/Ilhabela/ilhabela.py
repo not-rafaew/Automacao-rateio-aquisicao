@@ -6,26 +6,27 @@ import pandas as pd # Biblioteca para controlar planilhas em python.
 #-------------------------------------------------------------------------------------------------------#
 
 #Esses campos serão preenchidos conforme as informações forem encontradas no PDF.
-def novo_apartamento():
+def novo_apartamento(parcelas):
     return{
      "Bloco" : "", #Salva o bloco.
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
-     "Seguro" : None,
-     "Desobstrucao Esgoto" : None, 
-     "Fundo de Pintura" : None,
-     "Uso Salao de Festas" : None,
-     "Seguro Cont Assis 24H" : None, 
+     "Cota do mês": None,
+     "Água": None,
+     "Fundo de Pintura {parcelas['fundo_pintura']}" : None,
+     "Seguro Cont. Assis. 24H OPC" : None,
+     "Tarifa Basica de Água" : None,
+     "Fundo Reserva (5%)" : None,
+     "Leitura de Água" : None,
+     "Clube de Vantagens" : None,
+     "Seguro {parcelas['seguro']}" : None,
+     "Desobstrucão Esgoto {parcelas['desobstrucao_esgoto']}" : None,  
+     "Salão de Festas" : None,
+     "Telhado {parcelas['telhado']}": None,
      "Dif Doc Pago a Maior" :None,
      "Dif Doc Pago a Menor" :None,
-     "Tarifa Basica de Agua" : None,
-     "Telhado": None,
-     "Fundo Reserva" : None, 
-     "Leitura de Água" : None,
-     "Bonificacao Indevida" :None,
-     "Clube de Vantagens" : None, 
+     "Bonificacao Indevida" :None, 
      "Cameras" : None,   
     }
 
@@ -34,8 +35,8 @@ def novo_apartamento():
 def salvar_apartamento(apartamento, apartamentos):
 
 # Regra de negócio da Cota do Mês
-    if apartamento["Cota do Mes"] == 0:
-        apartamento["Cota do Mes"] = None
+    if apartamento["Cota do mês"] == 0:
+        apartamento["Cota do mês"] = None
 
 
 #So salva se existir uma unidade cadastrada.
@@ -47,7 +48,7 @@ def salvar_apartamento(apartamento, apartamentos):
 
 #Processa uma linha do PDF, identifica o tipo de informação
 #E preenche os dados do apartamento atual
-def processar_linha(linha, apartamento, apartamentos):
+def processar_linha(linha, apartamento, apartamentos, parcelas):
 
 #IDENTIFICANDO APARTAMENTO
     resultado = re.search(
@@ -59,10 +60,10 @@ def processar_linha(linha, apartamento, apartamentos):
         salvar_apartamento(apartamento, apartamentos)
 
         apartamento.clear()
-        apartamento.update(novo_apartamento())
+        apartamento.update(novo_apartamento(parcelas))
 
-        apartamento["Unidade"] = resultado.group(1)
-        apartamento["Bloco"] = resultado.group(2)
+        apartamento["Unidade"] = f"APTO {resultado.group(1)}"
+        apartamento["Bloco"] = f"BL. {resultado.group(2)}"
         apartamento["Vencimento"] = resultado.group(3)
 
         return
@@ -80,13 +81,27 @@ def processar_linha(linha, apartamento, apartamentos):
 
         valor = converter_valor(resultado_cota_do_mes.group(1))
 
-        if apartamento["Cota do Mes"] is None:
-            apartamento["Cota do Mes"] = 0
+        if apartamento["Cota do mês"] is None:
+            apartamento["Cota do mês"] = 0
 
-        apartamento["Cota do Mes"] += valor
+        apartamento["Cota do mês"] += valor
 
         return
     
+
+#Agua
+    resultado_agua = re.search(
+        r"2\s+AGUA\s+(-?[\d.]+,\d+)",
+        linha
+    )
+
+    if resultado_agua:
+
+        apartamento["Água"] = converter_valor(
+            resultado_agua.group(1)
+        )
+
+        return
 
 #Seguro
     resultado_seguro = re.search(
@@ -95,7 +110,14 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_seguro:
-        apartamento["Seguro"] = converter_valor(resultado_seguro.group(1))
+        
+        nome_coluna_seguro = (
+           f"Seguro {parcelas['seguro']}" 
+        )
+
+        apartamento[nome_coluna_seguro] = converter_valor(
+            resultado_seguro.group(1)
+        )
 
         return
     
@@ -107,7 +129,14 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_desobstrucao_esgoto:
-        apartamento["Desobstrucao Esgoto"] = converter_valor(resultado_desobstrucao_esgoto.group(1))
+        
+        nome_coluna_desobstrucao = (
+           f"Desobstrução Esgoto {parcelas['desobstrucao_esgoto']}"  
+        )
+
+        apartamento[nome_coluna_desobstrucao] = converter_valor(
+            resultado_desobstrucao_esgoto.group(1)
+        )
 
         return
 
@@ -119,7 +148,14 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_fundo_de_pintura:
-        apartamento["Fundo de Pintura"] = converter_valor(resultado_fundo_de_pintura.group(1))
+        
+        nome_coluna_fundo_pintura = (
+           f"Fundo de Pintura {parcelas['fundo_pintura']}" 
+        )
+
+        apartamento[nome_coluna_fundo_pintura] = converter_valor(
+            resultado_fundo_de_pintura.group(1)
+        )
 
         return
     
@@ -134,11 +170,11 @@ def processar_linha(linha, apartamento, apartamentos):
 
         valor = converter_valor(resultado_salao_de_festas.group(1))
 
-        if apartamento["Uso Salao de Festas"] is None:
+        if apartamento["Salão de Festas"] is None:
 
-            apartamento["Uso Salao de Festas"] = valor
+            apartamento["Salão de Festas"] = valor
         else:
-            apartamento["Uso Salao de Festas"] += valor
+            apartamento["Salão de Festas"] += valor
         
         return
     
@@ -150,7 +186,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_seguro_cont_assis_24h:
-        apartamento["Seguro Cont Assis 24H"] = converter_valor(resultado_seguro_cont_assis_24h.group(1))
+        apartamento["Seguro Cont. Assis. 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24h.group(1))
 
         return
 
@@ -185,7 +221,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_tarifa_basica_de_agua:
-        apartamento["Tarifa Basica de Agua"] = converter_valor(resultado_tarifa_basica_de_agua.group(1))
+        apartamento["Tarifa Basica de Água"] = converter_valor(resultado_tarifa_basica_de_agua.group(1))
 
         return
 
@@ -196,7 +232,14 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_telhado:
-        apartamento["Telhado"] = converter_valor(resultado_telhado.group(1))
+        
+        nome_coluna_telhado = (
+           f"Telhado {parcelas['telhado']}" 
+        )
+
+        apartamento[nome_coluna_telhado] = converter_valor(
+            resultado_telhado.group(1)
+        )
 
         return
 
@@ -207,7 +250,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_fundo_reserva:
-        apartamento["Fundo Reserva"] = converter_valor(resultado_fundo_reserva.group(1))
+        apartamento["Fundo Reserva (5%)"] = converter_valor(resultado_fundo_reserva.group(1))
 
         return
     
@@ -261,6 +304,66 @@ def processar_linha(linha, apartamento, apartamentos):
 
 
 #-------------------------------------------------------------------------------------------------------#
+def identificar_parcelas(texto):
+
+    parcelas = {
+        "seguro": "",
+        "desobstrucao_esgoto": "",
+        "fundo_pintura": "",
+        "telhado": ""
+
+    }
+
+    resultado = re.search(
+       r"3\s+SEGURO\s+(\d+)/(\d+)",
+       texto,
+       re.IGNORECASE 
+    )
+
+    if resultado:
+        parcelas["seguro"] = (
+           f"{int(resultado.group(1)):02d}/"
+           f"{int(resultado.group(2)):02d}" 
+        )
+
+    resultado = re.search(
+      r"78\s+DESOBSTRUCAO ESGOTO\s+(\d+)/(\d+)",
+      texto,
+      re.IGNORECASE  
+    )
+
+    if resultado:
+        parcelas["desobstrucao_esgoto"] = (
+           f"{int(resultado.group(1)):02d}/"
+           f"{int(resultado.group(2)):02d}" 
+        )
+
+    resultado = re.search (
+       r"89\s+FUNDO DE PINTURA\s+(\d+)/(\d+)",
+       texto,
+       re.IGNORECASE 
+    )
+
+    if resultado:
+        parcelas["fundo_pintura"] = (
+           f"{int(resultado.group(1)):02d}/"
+           f"{int(resultado.group(2)):02d}" 
+        )
+
+    resultado = re.search(
+        r"1195\s+TELHADO\s+(\d+)/(\d+)",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        parcelas["telhado"] = (
+            f"{int(resultado.group(1)):02d}/"
+            f"{int(resultado.group(2)):02d}"
+        )
+
+    return parcelas
+
 
 #Extrai as informações dos boletos do condominio Ilhabela
 def extrair_ilhabela(caminho_pdf):
@@ -268,26 +371,7 @@ def extrair_ilhabela(caminho_pdf):
     #Lista onde serão aramzenados todos os apartamentos encontrados
     apartamentos = [] #Cria uma lista onde vamos guardar todos os apartamentos encontrados.
 
-    #Cria um novo apartamento
-    apartamento = novo_apartamento()
 
-    totais_pdf = {            
-    "Cota do Mes": 0,
-    "Seguro" : 0,
-    "Desobstrucao Esgoto" : 0, 
-    "Fundo de Pintura" : 0,
-    "Uso Salao de Festas" : 0,
-    "Seguro Cont Assis 24H" : 0, 
-    "Dif Doc Pago a Maior" :0,
-    "Dif Doc Pago a Menor" :0,
-    "Tarifa Basica de Agua" : 0, 
-    "Fundo Reserva" : 0, 
-    "Leitura de Água" : 0,
-    "Telhado": 0,
-    "Bonificacao Indevida" :0,
-    "Clube de Vantagens" : 0, 
-    "Cameras" : 0,   
-    }
 
     #Coordenadas utilizadas para dividir cada pagina em duas colunas.
     LIMITE_ESQUERDA = (0, 0, 298, 842)
@@ -297,6 +381,35 @@ def extrair_ilhabela(caminho_pdf):
     #Abre o pdf.
     #o "with" fecha o arquivo automaticamente quando terminar.
     with pdfplumber.open (caminho_pdf) as pdf: 
+
+        texto_completo = ""
+
+        for pagina in pdf.pages:
+            texto_completo += (pagina.extract_text() or "") + "\n"
+
+        parcelas = identificar_parcelas(texto_completo)
+
+        nome_coluna_fundo_pintura = (
+           f"Fundo de Pintura {parcelas['fundo_pintura']}" 
+        )
+
+        nome_coluna_seguro = (
+            f"Seguro {parcelas['seguro']}"
+        )
+
+        nome_coluna_desobstrucao = (
+           f"Desobstrução Esgoto {parcelas['desobstrucao_esgoto']}" 
+        )
+
+        nome_coluna_telhado = (
+           f"Telhado {parcelas['telhado']}" 
+        )
+
+        totais_pdf = {}
+
+        apartamento = novo_apartamento(parcelas)
+
+        print ("PARCELAS ENCONTRADAS", parcelas)
 
     
         chegou_nos_totais = False
@@ -328,13 +441,18 @@ def extrair_ilhabela(caminho_pdf):
                 if chegou_nos_totais:
                     processar_totais(
                         linha,
-                        totais_pdf
+                        totais_pdf,
+                        nome_coluna_seguro,
+                        nome_coluna_desobstrucao,
+                        nome_coluna_fundo_pintura,
+                        nome_coluna_telhado 
                     )
                                 
                 else: processar_linha(
                         linha,
                         apartamento,
-                        apartamentos
+                        apartamentos,
+                        parcelas
                     )
                 
                 
@@ -349,15 +467,20 @@ def extrair_ilhabela(caminho_pdf):
                     if chegou_nos_totais:
                                                     
                         processar_totais(
-                             linha,
-                             totais_pdf
+                            linha,
+                            totais_pdf,
+                            nome_coluna_seguro,
+                            nome_coluna_desobstrucao,
+                            nome_coluna_fundo_pintura,
+                            nome_coluna_telhado
                         )
                                                 
                     else:
                         processar_linha(
                               linha,
                               apartamento,
-                              apartamentos
+                              apartamentos,
+                              parcelas
                         )
 
 
@@ -373,7 +496,7 @@ def extrair_ilhabela(caminho_pdf):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
-def processar_totais(linha, totais_pdf):
+def processar_totais(linha, totais_pdf, nome_coluna_seguro, nome_coluna_desobstrucao, nome_coluna_fundo_pintura, nome_coluna_telhado):
 
 
     #Cota do mes
@@ -388,10 +511,22 @@ def processar_totais(linha, totais_pdf):
         valor = converter_valor(resultado_cota_do_mes.group(1))
     
         if valor > 0:
-            totais_pdf["Cota do Mes"] = valor
+            totais_pdf["Cota do mês"] = valor
             
             return
     
+#Agua
+    resultado_agua = re.search(
+       r"2\s+AGUA\s+(-?[\d.]+,\d+)",
+       linha 
+    )
+
+    if resultado_agua:
+        totais_pdf["Água"] = converter_valor(
+            resultado_agua.group(1)
+        )
+
+        return
 
 #Seguro
     resultado_seguro = re.search(
@@ -400,7 +535,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_seguro:
-        totais_pdf["Seguro"] = converter_valor(resultado_seguro.group(1))
+        totais_pdf[nome_coluna_seguro] = converter_valor(resultado_seguro.group(1))
 
         return
     
@@ -412,7 +547,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_desobstrucao_esgoto:
-        totais_pdf["Desobstrucao Esgoto"] = converter_valor(resultado_desobstrucao_esgoto.group(1))
+        totais_pdf[nome_coluna_desobstrucao] = converter_valor(resultado_desobstrucao_esgoto.group(1))
 
         return
 
@@ -424,7 +559,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_fundo_de_pintura:
-        totais_pdf["Fundo de Pintura"] = converter_valor(resultado_fundo_de_pintura.group(1))
+        totais_pdf[nome_coluna_fundo_pintura] = converter_valor(resultado_fundo_de_pintura.group(1))
 
         return
     
@@ -439,11 +574,11 @@ def processar_totais(linha, totais_pdf):
 
         valor = converter_valor(resultado_salao_de_festas.group(1))
 
-        if totais_pdf["Uso Salao de Festas"] is None:
-
-            totais_pdf["Uso Salao de Festas"] = valor
+        if "Salão de Festas" not in totais_pdf:
+           
+            totais_pdf["Salão de Festas"] = valor
         else:
-            totais_pdf["Uso Salao de Festas"] += valor
+            totais_pdf["Salão de Festas"] += valor
         
         return
     
@@ -455,7 +590,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_seguro_cont_assis_24h:
-        totais_pdf["Seguro Cont Assis 24H"] = converter_valor(resultado_seguro_cont_assis_24h.group(1))
+        totais_pdf["Seguro Cont. Assis. 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24h.group(1))
 
         return
 
@@ -490,7 +625,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_tarifa_basica_de_agua:
-        totais_pdf["Tarifa Basica de Agua"] = converter_valor(resultado_tarifa_basica_de_agua.group(1))
+        totais_pdf["Tarifa Basica de Água"] = converter_valor(resultado_tarifa_basica_de_agua.group(1))
 
         return
 
@@ -501,7 +636,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_telhado:
-        totais_pdf["Telhado"] = converter_valor(resultado_telhado.group(1))
+        totais_pdf[nome_coluna_telhado] = converter_valor(resultado_telhado.group(1))
 
         return
 
@@ -513,7 +648,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_fundo_reserva:
-        totais_pdf["Fundo Reserva"] = converter_valor(resultado_fundo_reserva.group(1))
+        totais_pdf["Fundo Reserva (5%)"] = converter_valor(resultado_fundo_reserva.group(1))
 
         return
     

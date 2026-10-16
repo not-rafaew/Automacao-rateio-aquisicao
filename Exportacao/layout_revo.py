@@ -11,7 +11,10 @@ def montar_layout_revo(df, competencia):
         df_revo["Bloco"] = ""
 
     df_revo["Unidade"] = df["Unidade"]
-    df_revo["Vencimento"] = df["Vencimento"]
+    if "Vencimento" in df.columns:
+        df_revo["Vencimento"] = df["Vencimento"]
+    else:
+        df_revo["Vencimento"] = ""
 
     df_revo["Competencia"] = competencia
 

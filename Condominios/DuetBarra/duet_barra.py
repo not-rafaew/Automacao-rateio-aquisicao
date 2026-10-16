@@ -5,19 +5,19 @@ import pandas as pd # Biblioteca para controlar planilhas em python.
 
 
 #Esses campos serão preenchidos conforme as informações forem encontradas no PDF.
-def novo_apartamento():
+def novo_apartamento(nome_coluna_laudo):
     return{
      "Bloco" : "", #Salva o bloco.
      "Unidade" : "", #Salva a unidade.
 
-     "Cota do Mes": None,
-     "Agua" : None,
-     "Churrasqueira": None,
-     "Cota Extra": None,
-     "Energia Area Comum" : None, 
-     "Enxoval" : None,
+     "Cota do mês": None,
      "Fundo de Reserva" : None,
-     "Salao de Festas" : None, 
+     "Água" : None,
+     "Energia Área Comum" : None,
+     nome_coluna_laudo: None,
+     "Salão de Festa" : None, 
+     "Churrasqueira": None, 
+     "Enxoval" : None,
     }
 
 
@@ -37,7 +37,7 @@ def salvar_apartamento(apartamento, apartamentos):
 
 #Processa uma linha do PDF, identifica o tipo de informação
 #E preenche os dados do apartamento atual
-def processar_linha(linha, apartamento, apartamentos):
+def processar_linha(linha, apartamento, apartamentos, nome_coluna_laudo):
 
 
 #IDENTIFICANDO APARTAMENTO
@@ -50,16 +50,16 @@ def processar_linha(linha, apartamento, apartamentos):
         salvar_apartamento(apartamento, apartamentos)
 
         apartamento.clear()
-        apartamento.update(novo_apartamento())
+        apartamento.update(novo_apartamento(nome_coluna_laudo))
 
-        apartamento["Bloco"] = resultado.group(1)
-        apartamento["Unidade"] = resultado.group(2)
+        apartamento["Bloco"] = f"BL{int(resultado.group(1)):02d}"
+        apartamento["Unidade"] = int(resultado.group(2))
 
         return
     
 #DESPESAS
 
-#Cota do mes
+#Cota do mês
     resultado_cota_do_mes = re.search(
         r"PRINCIPAL\s*->\s*COTA CONDOMINIAL.*?R\$\s*(-?\d+,\d+)",
         linha
@@ -67,7 +67,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
     if resultado_cota_do_mes:
 
-        apartamento["Cota do Mes"] = converter_valor(
+        apartamento["Cota do mês"] = converter_valor(
             resultado_cota_do_mes.group(1)
        )
 
@@ -81,7 +81,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
     if resultado_agua:
 
-        apartamento["Agua"] = converter_valor(
+        apartamento["Água"] = converter_valor(
             resultado_agua.group(1)
     )
 
@@ -96,7 +96,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
     if resultado_energia_area_comum:
 
-        apartamento["Energia Area Comum"] = converter_valor(
+        apartamento["Energia Área Comum"] = converter_valor(
             resultado_energia_area_comum.group(1)
     )
 
@@ -143,7 +143,7 @@ def processar_linha(linha, apartamento, apartamentos):
             resultado_cota_extra.group(1)
     )
 
-        apartamento["Cota Extra"] = valor
+        apartamento[nome_coluna_laudo] = valor
 
         print(
             "COTA EXTRA:",
@@ -176,7 +176,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
     if resultado_salao_de_festas:
 
-        apartamento["Salao de Festas"] = converter_valor(
+        apartamento["Salão de Festa"] = converter_valor(
             resultado_salao_de_festas.group(1)
     )
 
@@ -188,21 +188,39 @@ def extrair_duet(caminho_pdf):
 
     apartamentos = []
 
-    apartamento = novo_apartamento()
-
-    totais_pdf = {
-    "Cota do Mes": 0,
-    "Agua": 0,
-    "Energia Area Comum": 0,
-    "Enxoval": 0,
-    "Churrasqueira": 0,
-    "Cota Extra": 0,
-    "Fundo de Reserva": 0,
-    "Salao de Festas": 0,
-    }
-
-
     with pdfplumber.open(caminho_pdf) as pdf:
+
+        texto_completo = ""
+
+        for pagina in pdf.pages:
+            texto_completo += (pagina.extract_text() or "") + "\n"
+
+        parcela_laudo = identificar_parcela_laudo(texto_completo)
+
+        print ("\nPARCELA LAUDO")
+        print (parcela_laudo)
+
+        nome_coluna_laudo = (
+            f"Laudo Técnico - Fech. Varanda {parcela_laudo}"
+        )
+        
+        print("\nNOME COLUNA LAUDO:")
+        print(nome_coluna_laudo)
+
+        apartamento = novo_apartamento(
+            nome_coluna_laudo
+        )
+
+        totais_pdf = {
+            "Cota do mês": 0,
+            "Fundo de Reserva": 0,
+            "Água": 0,
+            "Energia Área Comum": 0,
+            nome_coluna_laudo: 0,
+            "Salão de Festa": 0,
+            "Churrasqueira": 0,
+            "Enxoval": 0,
+        }
 
         chegou_nos_totais = False
 
@@ -222,8 +240,9 @@ def extrair_duet(caminho_pdf):
 
                 if chegou_nos_totais:
                     processar_totais(
-                         linha,
-                        totais_pdf
+                        linha,
+                        totais_pdf,
+                        nome_coluna_laudo
                     )
                 
                 else:
@@ -235,7 +254,8 @@ def extrair_duet(caminho_pdf):
                          processar_linha(
                             linha_cota_extra,
                             apartamento,
-                            apartamentos
+                            apartamentos,
+                            nome_coluna_laudo
                         )
 
 
@@ -243,6 +263,7 @@ def extrair_duet(caminho_pdf):
                         linha,
                         apartamento,
                         apartamentos,
+                        nome_coluna_laudo
                     )
 
     salvar_apartamento(apartamento, apartamentos)
@@ -256,9 +277,28 @@ def extrair_duet(caminho_pdf):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
+def identificar_parcela_laudo(texto):
+
+    resultado = re.search(
+      r"LAUDO TÉCNICO DE FECHAMENTO DE VARANDA.*?"
+      r"CORTINA DE VIDRO\s+(\d+)/(\d+)",
+      texto,
+      re.IGNORECASE | re.DOTALL
+    )
+
+    if resultado:
+
+        parcela = (
+           f"{int(resultado.group(1)):02d}/"
+           f"{int(resultado.group(2)):02d}" 
+        )
+
+        return parcela
+
+    return ""
 
 #Processar os totais 
-def processar_totais(linha, totais_pdf):
+def processar_totais(linha, totais_pdf, nome_coluna_laudo):
     
     resultado_cota_do_mes = re.search(
         r"PRINCIPAL\s*->\s*COTA CONDOMINIAL.*?R\$\s*(-?[\d\.]+,\d+)",
@@ -267,7 +307,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_cota_do_mes:
 
-        totais_pdf["Cota do Mes"] = converter_valor(
+        totais_pdf["Cota do mês"] = converter_valor(
             resultado_cota_do_mes.group(1)
        )
 
@@ -281,7 +321,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_agua:
 
-        totais_pdf["Agua"] = converter_valor(
+        totais_pdf["Água"] = converter_valor(
             resultado_agua.group(1)
     )
 
@@ -296,7 +336,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_energia_area_comum:
 
-        totais_pdf["Energia Area Comum"] = converter_valor(
+        totais_pdf["Energia Área Comum"] = converter_valor(
             resultado_energia_area_comum.group(1)
     )
 
@@ -338,7 +378,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_cota_extra:
         
-        totais_pdf["Cota Extra"] = converter_valor(
+        totais_pdf[nome_coluna_laudo] = converter_valor(
             resultado_cota_extra.group(1)
         )
 
@@ -367,7 +407,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_salao_de_festas:
 
-        totais_pdf["Salao de Festas"] = converter_valor(
+        totais_pdf["Salão de Festa"] = converter_valor(
             resultado_salao_de_festas.group(1)
     )
 
