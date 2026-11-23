@@ -12,20 +12,21 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
+     "Água": None,
      "Multa Inf Reg Interno" : None,
-     "Salao de Festas" : None, #Salva o salão de festas.
-     "Seguro Cont Assis 24H OPC" : None, #Salva o seguro.
+     "Salão de Festas" : None, #Salva o salão de festas.
+     "Seguro Cont. Assis. 24H OPC" : None, #Salva o seguro.
      "Dif. Doc Pago a Menor" : None, #Salva o dif doc pago a menor.
      "Dif. Doc Pago a Maior" : None, #Salva o dif doc pago a maior.
-     "Purificador de Agua" : None, #Salva o purificador de agua.
+     "Purificador de Água" : None, #Salva o purificador de agua.
      "Copos Salao de Festas" : None, #Salva o purificador de agua.
      "Tag de Acesso" : None, #Salva a tag de acesso.
-     "Leitura de Agua" : None, #Salva a leitura de agua.
-     "Religacao de Agua" : None, #Salva religação de agua.
+     "Leitura de Água" : None, #Salva a leitura de agua.
+     "Religação de Água" : None, #Salva religação de agua.
      "Agua Area Comum" : None, #Salva Agua area comum.
      "Utensilios Salao de Festas" : None, #Salva utensilios salão de festas
-     "Desconto Agua" : None, #Salva desconto de agua.
+     "Desconto Água" : None, #Salva desconto de agua.
      
     }
 
@@ -55,8 +56,8 @@ def processar_linha(linha, apartamento, apartamentos):
         apartamento.clear()
         apartamento.update(novo_apartamento())
 
-        apartamento["Unidade"] = resultado.group(1)
-        apartamento["Bloco"] = resultado.group(2)
+        apartamento["Unidade"] = f"APTO {resultado.group(1)}"
+        apartamento["Bloco"] = f"BL. {resultado.group(2)}"
         apartamento["Vencimento"] = resultado.group(3)
 
         return
@@ -74,15 +75,32 @@ def processar_linha(linha, apartamento, apartamentos):
 
         valor = converter_valor(resultado_cota_do_mes.group(1))
 
-        if apartamento["Cota do Mes"] is None:
+        if apartamento["Cota do mês"] is None:
 
             if valor < 0:
-                apartamento["Cota do Mes"] = 0
+                apartamento["Cota do mês"] = 0
             else:
-                apartamento["Cota do Mes"] = valor
+                apartamento["Cota do mês"] = valor
         
         return
-    
+
+
+#Água
+    resultado_agua = re.search(
+       r"2\s+AGUA\s+(-?[\d.]+,\d+)",
+       linha 
+    )
+
+    if resultado_agua:
+
+        valor = converter_valor(
+            resultado_agua.group(1)
+        )
+
+        apartamento["Água"] = valor
+
+        return
+
 #Salão de festas
     resultado_salao_de_festas = re.search(
         r"732 USO SALAO DE FESTAS 1/1 (\d+,\d+)", 
@@ -93,11 +111,11 @@ def processar_linha(linha, apartamento, apartamentos):
 
         valor = converter_valor(resultado_salao_de_festas.group(1))
 
-        if apartamento["Salao de Festas"] is None:
+        if apartamento["Salão de Festas"] is None:
 
-            apartamento["Salao de Festas"] = valor
+            apartamento["Salão de Festas"] = valor
         else:
-            apartamento["Salao de Festas"] += valor
+            apartamento["Salão de Festas"] += valor
         
         return
     
@@ -108,7 +126,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_seguro_cont_assis_24H_OPC:
-        apartamento["Seguro Cont Assis 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24H_OPC.group(1))
+        apartamento["Seguro Cont. Assis. 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24H_OPC.group(1))
 
         return
 
@@ -142,7 +160,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_purificador_de_agua:
-        apartamento["Purificador de Agua"] = converter_valor(resultado_purificador_de_agua.group(1))
+        apartamento["Purificador de Água"] = converter_valor(resultado_purificador_de_agua.group(1))
 
         return
 
@@ -165,7 +183,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_leitura_de_agua:
-        apartamento["Leitura de Agua"] = converter_valor(resultado_leitura_de_agua.group(1))
+        apartamento["Leitura de Água"] = converter_valor(resultado_leitura_de_agua.group(1))
 
 
 #Religação de Agua
@@ -175,7 +193,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_religacao_de_agua:
-        apartamento["Religacao de Agua"] = converter_valor(resultado_religacao_de_agua.group(1))
+        apartamento["Religação de Água"] = converter_valor(resultado_religacao_de_agua.group(1))
 
 
 #Agua area Comum
@@ -202,10 +220,10 @@ def processar_linha(linha, apartamento, apartamentos):
 
         valor = converter_valor(resultado_desconto_agua.group(1))
 
-        if apartamento["Desconto Agua"] is None:
-            apartamento["Desconto Agua"] = valor
+        if apartamento["Desconto Água"] is None:
+            apartamento["Desconto Água"] = valor
         else:
-            apartamento["Desconto Agua"] += valor
+            apartamento["Desconto Água"] += valor
         
         return
     
@@ -253,22 +271,7 @@ def extrair_marechal(caminho_pdf):
     #Cria um novo apartamento
     apartamento = novo_apartamento()
 
-    totais_pdf = {
-    "Cota do Mes": 0,
-    "Multa Inf Reg Interno" : 0,
-    "Salao de Festas" : 0, 
-    "Seguro Cont Assis 24H OPC" : 0, 
-    "Dif. Doc Pago a Menor" : 0, 
-    "Dif. Doc Pago a Maior" : 0, 
-    "Purificador de Agua" : 0, 
-    "Copos Salao de Festas" : 0, 
-    "Tag de Acesso" : 0, 
-    "Leitura de Agua" : 0, 
-    "Religacao de Agua" : 0, 
-    "Agua Area Comum" : 0, 
-    "Utensilios Salao de Festas" : 0, 
-    "Desconto Agua" : 0, 
-    }
+    totais_pdf = {}
 
     #Coordenadas utilizadas para dividir cada pagina em duas colunas.
     LIMITE_ESQUERDA = (0, 0, 298, 842)
@@ -367,10 +370,27 @@ def processar_totais(linha, totais_pdf):
         valor = converter_valor(resultado_cota_do_mes.group(1))
 
         if valor > 0:
-            totais_pdf["Cota do Mes"] = valor
+            totais_pdf["Cota do mês"] = valor
         
         return
-    
+
+#Água
+
+    resultado_agua = re.search(
+    r"2\s+AGUA\s+(-?[\d.]+,\d+)",
+    linha
+    )
+
+    if resultado_agua:
+
+        valor = converter_valor(
+            resultado_agua.group(1)
+    )
+
+        totais_pdf["Água"] = valor
+
+        return
+
 #Salão de festas
     resultado_salao_de_festas = re.search(
         r"732\s+USO SALAO DE FESTAS\s+(-?[\d\.]+,\d+)", 
@@ -381,7 +401,9 @@ def processar_totais(linha, totais_pdf):
 
         valor = converter_valor(resultado_salao_de_festas.group(1))
 
-        totais_pdf["Salao de Festas"] += valor
+        totais_pdf["Salão de Festas"] = (
+            totais_pdf.get("Salão de Festas", 0) + valor
+        )
 
         return
 
@@ -393,7 +415,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_seguro_cont_assis_24H_OPC:
-        totais_pdf["Seguro Cont Assis 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24H_OPC.group(1))
+        totais_pdf["Seguro Cont. Assis. 24H OPC"] = converter_valor(resultado_seguro_cont_assis_24H_OPC.group(1))
 
         return
 
@@ -427,7 +449,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_purificador_de_agua:
-        totais_pdf["Purificador de Agua"] = converter_valor(resultado_purificador_de_agua.group(1))
+        totais_pdf["Purificador de Água"] = converter_valor(resultado_purificador_de_agua.group(1))
 
         return
 
@@ -450,7 +472,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_leitura_de_agua:
-        totais_pdf["Leitura de Agua"] = converter_valor(resultado_leitura_de_agua.group(1))
+        totais_pdf["Leitura de Água"] = converter_valor(resultado_leitura_de_agua.group(1))
 
 
 #Religação de Agua
@@ -460,7 +482,7 @@ def processar_totais(linha, totais_pdf):
     )
 
     if resultado_religacao_de_agua:
-        totais_pdf["Religacao de Agua"] = converter_valor(resultado_religacao_de_agua.group(1))
+        totais_pdf["Religação de Água"] = converter_valor(resultado_religacao_de_agua.group(1))
 
 
 #Agua area Comum
@@ -487,7 +509,9 @@ def processar_totais(linha, totais_pdf):
 
         valor = converter_valor(resultado_desconto_agua.group(1))
 
-        totais_pdf["Desconto Agua"] += valor
+        totais_pdf["Desconto Água"] = (
+            totais_pdf.get("Desconto Água", 0) + valor
+        )
 
         return
     

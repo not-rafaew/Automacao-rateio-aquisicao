@@ -19,6 +19,7 @@ def novo_apartamento(parcelas):
      "Tarifa Basica de Água" : None,
      "Fundo Reserva (5%)" : None,
      "Leitura de Água" : None,
+     f"desconto Água {parcelas['desconto_agua']}": None,
      "Clube de Vantagens" : None,
      "Seguro {parcelas['seguro']}" : None,
      "Desobstrucão Esgoto {parcelas['desobstrucao_esgoto']}" : None,  
@@ -265,6 +266,24 @@ def processar_linha(linha, apartamento, apartamentos, parcelas):
         apartamento["Leitura de Água"] = converter_valor(resultado_leitura_de_agua.group(1))
 
         return
+
+# Desconto Água
+    resultado_desconto_agua = re.search(
+      r"1532\s+DESCONTO AGUA(?:\s+\d+/\d+)?\s*(-?[\d.]+,\d+)",
+      linha  
+    )
+
+    if resultado_desconto_agua:
+
+        nome_coluna_desconto_agua = (
+            f"Desconto Água {parcelas['desconto_agua']}"
+        )
+
+        apartamento[nome_coluna_desconto_agua] = converter_valor(
+            resultado_desconto_agua.group(1)
+        )
+
+        return
     
 
 #Bonificacao Indevida
@@ -310,7 +329,8 @@ def identificar_parcelas(texto):
         "seguro": "",
         "desobstrucao_esgoto": "",
         "fundo_pintura": "",
-        "telhado": ""
+        "telhado": "",
+        "desconto_agua": ""
 
     }
 
@@ -362,6 +382,18 @@ def identificar_parcelas(texto):
             f"{int(resultado.group(2)):02d}"
         )
 
+    resultado = re.search(
+      r"1532\s+DESCONTO AGUA\s+(\d+)/(\d+)",
+      texto,
+      re.IGNORECASE  
+    )
+
+    if resultado: 
+        parcelas['desconto_agua'] = (
+            f"{int(resultado.group(1)):02d}/"
+            f"{int(resultado.group(2)):02d}"
+        )
+
     return parcelas
 
 
@@ -405,6 +437,10 @@ def extrair_ilhabela(caminho_pdf):
            f"Telhado {parcelas['telhado']}" 
         )
 
+        nome_coluna_desconto_agua = (
+            f"Desconto Água {parcelas['desconto_agua']}"
+        )
+
         totais_pdf = {}
 
         apartamento = novo_apartamento(parcelas)
@@ -445,7 +481,8 @@ def extrair_ilhabela(caminho_pdf):
                         nome_coluna_seguro,
                         nome_coluna_desobstrucao,
                         nome_coluna_fundo_pintura,
-                        nome_coluna_telhado 
+                        nome_coluna_telhado,
+                        nome_coluna_desconto_agua 
                     )
                                 
                 else: processar_linha(
@@ -472,7 +509,8 @@ def extrair_ilhabela(caminho_pdf):
                             nome_coluna_seguro,
                             nome_coluna_desobstrucao,
                             nome_coluna_fundo_pintura,
-                            nome_coluna_telhado
+                            nome_coluna_telhado,
+                            nome_coluna_desconto_agua
                         )
                                                 
                     else:
@@ -496,7 +534,7 @@ def extrair_ilhabela(caminho_pdf):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
-def processar_totais(linha, totais_pdf, nome_coluna_seguro, nome_coluna_desobstrucao, nome_coluna_fundo_pintura, nome_coluna_telhado):
+def processar_totais(linha, totais_pdf, nome_coluna_seguro, nome_coluna_desobstrucao, nome_coluna_fundo_pintura, nome_coluna_telhado, nome_coluna_desconto_agua):
 
 
     #Cota do mes
@@ -697,5 +735,19 @@ def processar_totais(linha, totais_pdf, nome_coluna_seguro, nome_coluna_desobstr
 
     if resultado_cameras:
         totais_pdf["Cameras"] = converter_valor(resultado_cameras.group(1))
+
+        return
+
+# Desconto agua
+    resultado_desconto_agua = re.search(
+      r"1532\s+DESCONTO AGUA(?:\s+\d+/\d+)?\s+(-?[\d.]+,\d+)",
+      linha  
+    )
+
+    if resultado_desconto_agua:
+
+        totais_pdf[nome_coluna_desconto_agua] = converter_valor(
+            resultado_desconto_agua.group(1)
+        )
 
         return

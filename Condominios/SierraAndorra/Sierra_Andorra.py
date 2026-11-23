@@ -6,17 +6,17 @@ import pandas as pd # Biblioteca para controlar planilhas em python.
 #-------------------------------------------------------------------------------------------------------#
 
 #Esses campos serão preenchidos conforme as informações forem encontradas no PDF.
-def novo_apartamento():
+def novo_apartamento(parcelas):
     return{
      "Bloco" : "", #Salva o bloco.
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
      "Fundo de Reserva" : None,
-     "Cota Extra" : None, 
-     "Fundo de Obras" : None,
-     "Salao de Festas": None,   
+     f"Cota Ambiental {parcelas['cota_ambiental']}": None, 
+     f"Fundo de Obras {parcelas['fundo_obras']}": None,
+     "Salão de Festas": None,   
     }
 
 #-------------------------------------------------------------------------------------------------------#
@@ -34,7 +34,40 @@ def salvar_apartamento(apartamento, apartamentos):
 def converter_valor(valor):
     return float(valor.replace(".", "").replace(",", "."))
 
-def processar_linha(linha, apartamento, apartamentos):
+def identificar_parcelas(texto):
+
+    parcelas = {
+        "cota_ambiental": "",
+        "fundo_obras": ""
+    }
+
+    resultado = re.search(
+        r"Cota ambiental\s+(\d+)/(\d+)",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        parcelas["cota_ambiental"] = (
+            f"{int(resultado.group(1)):02d}/"
+            f"{int(resultado.group(2)):02d}" 
+        )
+
+    resultado = re.search(
+        r"Fundo de obras\s+(\d+)/(\d+)",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        parcelas["fundo_obras"] = (
+           f"{int(resultado.group(1)):02d}/"
+           f"{int(resultado.group(2)):02d}" 
+        )
+
+    return parcelas
+
+def processar_linha(linha, apartamento, apartamentos, parcelas):
 
     # Identificando apartamento
     resultado = re.search(
@@ -52,14 +85,14 @@ def processar_linha(linha, apartamento, apartamentos):
 
         # Limpa e prepara o novo apartamento
         apartamento.clear()
-        apartamento.update(novo_apartamento())
+        apartamento.update(novo_apartamento(parcelas))
 
         # Bloco e unidade
         apartamento["Bloco"] = resultado.group(1)
         apartamento["Unidade"] = resultado.group(2)
 
         # Cota do Mes
-        apartamento["Cota do Mes"] = converter_valor(
+        apartamento["Cota do mês"] = converter_valor(
             resultado.group(3)
         )
 
@@ -72,7 +105,7 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_fundo:
-        apartamento["Fundo de Reserva"] = converter_valor(
+        apartamento["Fundo Reserva"] = converter_valor(
             resultado_fundo.group(1)
         )
         return
@@ -84,9 +117,15 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_cota_ambiental:
-        apartamento["Cota Extra"] = converter_valor(
+
+        nome_coluna_cota_ambiental = (
+            f"Cota Ambiental {parcelas['cota_ambiental']}"
+        )
+
+        apartamento[nome_coluna_cota_ambiental] = converter_valor(
             resultado_cota_ambiental.group(1)
         )
+
         return
 
     # Fundo de Obras
@@ -96,9 +135,15 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_fundo_obras:
-        apartamento["Fundo de Obras"] = converter_valor(
+
+        nome_coluna_fundo_obras = (
+          f"Fundo de Obras {parcelas['fundo_obras']}"  
+        )
+
+        apartamento[nome_coluna_fundo_obras] = converter_valor(
             resultado_fundo_obras.group(1)
         )
+
         return
 
     #Salão de Festas
@@ -108,13 +153,13 @@ def processar_linha(linha, apartamento, apartamentos):
     )
 
     if resultado_salao:
-        apartamento["Salao de Festas"] = converter_valor(
+        apartamento["Salão de Festas"] = converter_valor(
             resultado_salao.group(1)
         )
         return
 
 
-def processar_totais (linha, totais_pdf):
+def processar_totais (linha, totais_pdf, parcelas):
 
     #Cota do Mes
     resultado_cota = re.search(
@@ -123,7 +168,7 @@ def processar_totais (linha, totais_pdf):
     )
 
     if resultado_cota:
-        totais_pdf["Cota do Mes"] = converter_valor(
+        totais_pdf["Cota do mês"] = converter_valor(
             resultado_cota.group(1)
         )
         return
@@ -135,7 +180,7 @@ def processar_totais (linha, totais_pdf):
     )
 
     if resultado_fundo:
-        totais_pdf["Fundo de Reserva"] = converter_valor(
+        totais_pdf["Fundo Reserva"] = converter_valor(
             resultado_fundo.group(1)
         )
         return
@@ -147,7 +192,12 @@ def processar_totais (linha, totais_pdf):
     )
 
     if resultado_cota_ambiental:
-        totais_pdf["Cota Extra"] = converter_valor(
+
+        nome_coluna_cota_ambiental = (
+           f"Cota Ambiental {parcelas['cota_ambiental']}" 
+        )
+
+        totais_pdf[nome_coluna_cota_ambiental] = converter_valor(
             resultado_cota_ambiental.group(1)
         )
         return
@@ -159,7 +209,12 @@ def processar_totais (linha, totais_pdf):
     )
 
     if resultado_fundo_obras:
-        totais_pdf["Fundo de Obras"] = converter_valor(
+
+        nome_coluna_fundo_obras = (
+           f"Fundo de Obras {parcelas['fundo_obras']}" 
+        )
+
+        totais_pdf[nome_coluna_fundo_obras] = converter_valor(
             resultado_fundo_obras.group(1)
         )
         return
@@ -171,7 +226,7 @@ def processar_totais (linha, totais_pdf):
     )
 
     if resultado_salao:
-        totais_pdf["Salao de Festas"] = converter_valor(
+        totais_pdf["Salão de Festas"] = converter_valor(
             resultado_salao.group(1)
         )
         return
@@ -180,23 +235,24 @@ def processar_totais (linha, totais_pdf):
 def extrair_sierraandorra(caminho_pdf):
 
     apartamentos = []
-    apartamento = novo_apartamento()
-
-    totais_pdf = {
-        "Cota do Mes": 0,
-        "Fundo de Reserva": 0,
-        "Cota Extra": 0,
-        "Fundo de Obras": 0,
-        "Salao de Festas": 0,
-    }
-
-    quadro_totais = False
 
     with pdfplumber.open(caminho_pdf) as pdf:
+
+        texto_completo = ""
 
         for pagina in pdf.pages:
 
             texto = pagina.extract_text() or ""
+            texto_completo += texto + "\n"
+
+            parcelas = identificar_parcelas(texto_completo)
+
+            apartamento = novo_apartamento(parcelas)
+
+            totais_pdf = {}
+
+            quadro_totais = False
+
 
             for linha in texto.splitlines():
 
@@ -211,12 +267,14 @@ def extrair_sierraandorra(caminho_pdf):
                     processar_linha(
                         linha,
                         apartamento,
-                        apartamentos
+                        apartamentos,
+                        parcelas
                     )
                 else:
                     processar_totais(
                         linha,
-                        totais_pdf
+                        totais_pdf,
+                        parcelas
                     )
 
     salvar_apartamento(apartamento, apartamentos)

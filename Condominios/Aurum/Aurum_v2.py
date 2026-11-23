@@ -9,7 +9,7 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "",
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
      "Agua": None,
      "Energia Eletrica" : None,
      "Fundo Reserva" : None, 
@@ -28,7 +28,7 @@ def extrair_aurum(caminho_pdf):
     
     
     totais_pdf = {
-    "Cota do Mes": 0,
+    "Cota do mês": 0,
     "Agua": 0,
     "Energia Eletrica" : 0,
     "Fundo Reserva" : 0, 
@@ -170,7 +170,7 @@ def processar_linha(linha, apartamentos, bloco_atual):
     if indice_cota < len(linha):
         cota = linha[indice_cota]
 
-        apartamento["Cota do Mes"] = converter_valor(cota)
+        apartamento["Cota do mês"] = converter_valor(cota)
 
     #Energia elétrica
     indice_energia = indice_cota + 1
@@ -263,7 +263,7 @@ def processar_totais(linha, totais_pdf, verbas_extras):
     #Os tres primeiros valores são sempre:
     #Água, Cota do Mês e Energia Elétrica
     totais_pdf["Agua"] = converter_valor(valores[0])
-    totais_pdf["Cota do Mes"] = converter_valor(valores[1])
+    totais_pdf["Cota do mês"] = converter_valor(valores[1])
     totais_pdf["Energia Eletrica"] = converter_valor(valores[2])
 
     # Depois vêm as verbas extras encontradas no cabeçalho
