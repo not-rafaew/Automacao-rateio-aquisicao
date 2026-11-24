@@ -31,6 +31,7 @@ def novo_apartamento():
         "Cota Extra - Enxoval": None,
         "Cota Paga - Protest": None,
         "Devolução Parte Cobrança Uso de Espaço" : None,
+        "Desconto Repasse Garantidora": None,
     }
 
 #Salva o apartamento atual na lista.
@@ -358,6 +359,22 @@ def processar_linha(linha, apartamento, apartamentos):
         )
         return
 
+# Desconto Repasse Garantidora 
+    resultado = re.search(
+        r"DESC\.\s*REPASSE GARANTIDORA.*?(-?)R\$\s*([\d.]+,\d{2})",
+        linha,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        valor = converter_valor(resultado.group(2))
+
+        if resultado.group(1) == "-":
+            valor *= -1
+
+        apartamento["Desconto Repasse Garantidora"] = valor
+        return
+
 def extrair_esplendor(caminho_pdf):
 
     apartamentos = []
@@ -384,6 +401,7 @@ def extrair_esplendor(caminho_pdf):
         "Cota Extra - Enxoval": 0,
         "Cota Paga - Protest": 0,
         "Devolução Parte Cobrança Uso de Espaço": 0,
+        "Desconto Repasse Garantidora": 0,
 
     }
 
@@ -795,4 +813,19 @@ def processar_totais(texto, totais_pdf):
          valor = -valor
 
         totais_pdf["Devolução Parte Cobrança Uso de Espaço"] = valor
+
+# Desconto Repasse Garantidora
+    resultado = re.search(
+        r"DESC\.\s*REPASSE GARANTIDORA.*?(-?)R\$\s*([\d.]+,\d{2})",
+        texto,
+        re.IGNORECASE
+    )
+
+    if resultado:
+        valor = converter_valor(resultado.group(2))
+
+        if resultado.group(1) == "-":
+            valor *= -1
+
+        totais_pdf["Desconto Repasse Garantidora"] = valor
 

@@ -12,13 +12,14 @@ from Condominios.Sol_Engenho.Sol_Engenho import extrair_soldoengenho
 from Condominios.Aleixo.Aleixo import extrair_aleixo
 from Condominios.Conviva.Conviva import extrair_conviva
 from Condominios.Esplendor.Esplendor import extrair_esplendor
+from Condominios.Bougainvillea.Bougainvillea import extrair_bougainvillea
 from Exportacao.salvar_excel import salvar_excel
 from Exportacao.layout_revo import montar_layout_revo
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from pathlib import Path
 
-caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Esplendor\Esplendor-Rateio-08.26.pdf"
-df, totais_pdf = extrair_esplendor(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\OneDrive\Desktop\Rateios\Sol do Engenho\Sol_do_Engenho-Rateio-12.25.pdf"
+df, totais_pdf = extrair_soldoengenho(caminho_pdf)
 
 df_revo = montar_layout_revo(
     df,
@@ -38,7 +39,7 @@ print("\nTOTAIS PDF:")
 print(totais_pdf)
 
 
-caminho_saida = Path("Dados") / "Saida" / "Esplendor" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Sol_do_Engenho" / "Teste.xlsx"
 
 salvar_excel(
    df_revo,

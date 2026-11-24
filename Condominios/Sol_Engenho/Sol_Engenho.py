@@ -12,9 +12,9 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
      "Reforco Orcamentario": None,
-     "Agua e Esgoto" : None,     
+     "Água e Esgoto" : None,     
     }
 
 #-------------------------------------------------------------------------------------------------------#
@@ -76,8 +76,8 @@ def processar_totais(texto, totais_pdf):
         # Agua e cota aparecem juntos
         if not tem_reforco and len(valores) == 2:
 
-            totais_pdf["Agua e Esgoto"] = converter_valor(valores[0])
-            totais_pdf["Cota do Mes"] = converter_valor(valores[1])
+            totais_pdf["Água e Esgoto"] = converter_valor(valores[0])
+            totais_pdf["Cota do mês"] = converter_valor(valores[1])
 
         for valor in valores:
             valores_totais.append(converter_valor(valor))
@@ -85,8 +85,8 @@ def processar_totais(texto, totais_pdf):
     if tem_reforco and len(valores_totais) >= 4:
 
         totais_pdf["Reforco Orcamentario"] = valores_totais[1]
-        totais_pdf["Agua e Esgoto"] = valores_totais[2]
-        totais_pdf["Cota do Mes"] = valores_totais[3]
+        totais_pdf["Água e Esgoto"] = valores_totais[2]
+        totais_pdf["Cota do mês"] = valores_totais[3]
 
 
     # MODELO SEM REFORÇO
@@ -141,8 +141,8 @@ def processar_totais(texto, totais_pdf):
 
                 if len(valores_verbas) >= 2:
 
-                    totais_pdf["Agua e Esgoto"] = valores_verbas[0]
-                    totais_pdf["Cota do Mes"] = valores_verbas[1]
+                    totais_pdf["Água e Esgoto"] = valores_verbas[0]
+                    totais_pdf["Cota do mês"] = valores_verbas[1]
 
 
 
@@ -157,8 +157,8 @@ def processar_grupo(grupo, apartamentos):
         # preenche os dados do apartamento
         apartamento["Bloco"] = grupo["Bloco"]
         apartamento["Unidade"] = unidade
-        apartamento["Agua e Esgoto"] = grupo["Agua e Esgoto"]
-        apartamento["Cota do Mes"] = grupo["Cota do Mes"]
+        apartamento["Água e Esgoto"] = grupo["Água e Esgoto"]
+        apartamento["Cota do mês"] = grupo["Cota do mês"]
         apartamento["Reforco Orcamentario"] = grupo["Reforco Orcamentario"]
 
         #Salva o apartamento na lista.
@@ -173,8 +173,8 @@ def extrair_soldoengenho(caminho_pdf):
     grupos = []
     apartamentos = []
     totais_pdf = {
-        "Cota do Mes": 0,
-        "Agua e Esgoto": 0,
+        "Cota do mês": 0,
+        "Água e Esgoto": 0,
         "Reforco Orcamentario": 0
     }
 
@@ -275,8 +275,8 @@ def extrair_soldoengenho(caminho_pdf):
                         "Bloco": bloco_atual,
                         "Quantidade": quantidade_esperada,
                         "Unidades": unidades_do_bloco,
-                        "Agua e Esgoto": agua_atual,
-                        "Cota do Mes": cota_atual,
+                        "Água e Esgoto": agua_atual,
+                        "Cota do mês": cota_atual,
                         "Reforco Orcamentario": reforco_atual
                     })
 
@@ -297,5 +297,10 @@ def extrair_soldoengenho(caminho_pdf):
         )
 
     df = pd.DataFrame(apartamentos)
+
+    df = df.sort_values(
+        by=["Bloco", "Unidade"],
+        key=lambda coluna: pd.to_numeric(coluna, errors="coerce")
+    ).reset_index(drop=True)
 
     return df, totais_pdf
