@@ -12,7 +12,7 @@ def novo_apartamento():
      "Unidade" : "", #Salva a unidade.
      "Vencimento" : "", #Salva o vencimento.
 
-     "Cota do Mes": None,
+     "Cota do mês": None,
      #"Acordo" : None,
      "Cedae" : None, 
      "Agua Area Comum" : None,
@@ -70,7 +70,7 @@ def processar_linha(linha, apartamento, apartamentos):
 
     if resultado_cota:
 
-        apartamento["Cota do Mes"] = converter_valor(
+        apartamento["Cota do mês"] = converter_valor(
             resultado_cota.group(1)
         )
 
@@ -157,7 +157,7 @@ def extrair_sollife(caminho_pdf):
     apartamento = novo_apartamento()
 
     totais_pdf = {
-        "Cota do Mes": 0,
+        "Cota do mês": 0,
        # "Acordo" : 0,
         "Cedae" : 0, 
         "Agua Area Comum" : 0,
@@ -215,7 +215,7 @@ def processar_totais(linha, totais_pdf):
 
     if resultado_cota:
 
-        totais_pdf["Cota do Mes"] = converter_valor(
+        totais_pdf["Cota do mês"] = converter_valor(
             resultado_cota.group(1)
         )
 
