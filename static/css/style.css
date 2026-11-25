@@ -49,7 +49,9 @@ form {
     font-weight: 600;
 }
 
-.campo select {
+.campo select,
+.campo input[type="date"],
+.campo input[type="month"] {
     width: 100%;
     height: 48px;
 
@@ -62,13 +64,17 @@ form {
     border-radius: 8px;
 
     font-size: 15px;
+    font-family: inherit;
     outline: none;
 
     cursor: pointer;
+    color-scheme: dark;
 
 }
 
-.campo select:focus {
+.campo select:focus,
+.campo input[type="date"]:focus,
+.campo input[type="month"]:focus {
     border-color: #168bff;
 }
 

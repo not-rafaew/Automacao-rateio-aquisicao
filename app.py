@@ -4,6 +4,7 @@ from pathlib import Path
 from io import BytesIO
 import webbrowser
 import threading
+from datetime import datetime
 
 from Condominios.Marechal.marechal import extrair_marechal
 from Condominios.Ilhabela.ilhabela import extrair_ilhabela
@@ -19,6 +20,7 @@ from Condominios.Conviva.Conviva import extrair_conviva
 
 from Exportacao.salvar_excel import salvar_excel
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
+from Exportacao.layout_revo import montar_layout_revo
 
 app = Flask(__name__)
 
@@ -43,6 +45,30 @@ def inicio():
 
         condominio = request.form.get("condominio")
         arquivo = request.files.get("arquivo")
+
+        vencimento = request.form.get("vencimento")
+        competencia = request.form.get("competencia")
+
+        if not vencimento or not competencia:
+            return render_template(
+                "index.html",
+                erro="Selecione o vencimento e a competência"
+            )
+
+        try:
+            vencimento = datetime.strptime(
+                vencimento, "%Y-%m-%d"
+            ).strftime("%d/%m/%Y")
+
+            competencia = datetime.strptime(
+                competencia, "%Y-%m"
+            ).strftime("%m/%Y")
+
+        except ValueError:
+            return render_template(
+                "index.html",
+                erro="Formato de data invalido."
+            )
 
         if not condominio:
             return render_template(
@@ -80,6 +106,10 @@ def inicio():
             extrator = extratores[condominio]
 
             df, totais_pdf = extrator(caminho_pdf)
+
+            df["Vencimento"] = vencimento
+
+            df = montar_layout_revo(df, competencia)
 
             print ("quantidade de registros:")
             print(len(df))
