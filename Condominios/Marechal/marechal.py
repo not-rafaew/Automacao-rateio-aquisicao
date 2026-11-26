@@ -76,12 +76,10 @@ def processar_linha(linha, apartamento, apartamentos):
         valor = converter_valor(resultado_cota_do_mes.group(1))
 
         if apartamento["Cota do mês"] is None:
+            apartamento["Cota do mês"] = 0
 
-            if valor < 0:
-                apartamento["Cota do mês"] = 0
-            else:
-                apartamento["Cota do mês"] = valor
-        
+        apartamento["Cota do mês"] += valor
+
         return
 
 

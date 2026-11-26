@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, send_file
 import tempfile
 from pathlib import Path
-from io import BytesIO
 import webbrowser
 import threading
 from datetime import datetime
+from uuid import uuid4
 
 from Condominios.Marechal.marechal import extrair_marechal
 from Condominios.Ilhabela.ilhabela import extrair_ilhabela
@@ -18,11 +18,13 @@ from Condominios.Sol_Engenho.Sol_Engenho import extrair_soldoengenho
 from Condominios.Aleixo.Aleixo import extrair_aleixo
 from Condominios.Conviva.Conviva import extrair_conviva
 
-from Exportacao.salvar_excel import salvar_excel
-from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from Exportacao.layout_revo import montar_layout_revo
+from Exportacao.validacao import gerar_validacao
+from Exportacao.salvar_validacao import salvar_validacao
+from Exportacao.salvar_csv import salvar_csv
 
 app = Flask(__name__)
+pasta_resultados = tempfile.TemporaryDirectory()
 
 extratores = {
     "marechal": extrair_marechal,
@@ -109,46 +111,82 @@ def inicio():
 
             df["Vencimento"] = vencimento
 
+            print(df.columns.tolist())
+            print(totais_pdf)
+            
+            # Gera a validação das despesas
+            relatorio = gerar_validacao(
+                df,
+                totais_pdf,
+                condominio
+            )
+
+            # Verifica a validação geral
+            aprovado = bool(relatorio) and all(
+                verba["Status"] == "OK"
+                for verba in relatorio
+            )
+
+            # Montar o layout Revo
             df = montar_layout_revo(df, competencia)
 
-            print ("quantidade de registros:")
-            print(len(df))
+            # Identificar único da geração
+            identificador = str(uuid4())
 
-            print ("Totais do PDF:")
-            print (totais_pdf)
+            # Cria a pasta dos resultados
+            pasta_saida = (
+                Path(pasta_resultados.name)
+                / identificador.replace("-", "")
+            )
 
-            caminho_excel = Path(pasta_temporaria) / "resultado.xlsx"
+            pasta_saida.mkdir()
 
-            if condominio == "aleixo":
-                salvar_excel_aleixo(
-                    df,
-                    caminho_excel,
-                    totais_pdf
-                )
-            else:
-                salvar_excel(
-                    df,
-                    caminho_excel,
-                    totais_pdf
-                )
+            # Caminhos dos arquivos
+            caminho_csv = pasta_saida / "aquisicao.csv"
+            caminho_excel = pasta_saida / "validacao.xlsx"
 
-            print ("Excel gerado em:")
-            print (caminho_excel)
+            # Exportar as despesas
+            salvar_csv(df, caminho_csv)
 
-            print ("Excel existe?")
-            print (caminho_excel.exists())
+            # Exportar a validação
+            salvar_validacao(relatorio, caminho_excel)
 
-            with open(caminho_excel, "rb") as arquivo_excel:
-                excel_memoria = BytesIO(arquivo_excel.read())
-
-            return send_file(
-                excel_memoria,
-                as_attachment=True,
-                download_name="resultado.xlsx",
-                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            # Envia os resultados para o front-end
+            return render_template (
+                "index.html",
+                relatorio=relatorio,
+                aprovado=aprovado,
+                identificador=identificador,
+                condominio=condominio
             )
 
     return render_template("index.html")
+
+@app.route("/download/<uuid:identificador>/<tipo>")
+def download(identificador, tipo):
+
+    arquivos = {
+        "aquisicao": "aquisicao.csv",
+        "validacao": "validacao.xlsx"
+    }
+
+    if tipo not in arquivos:
+        return "Arquivo inválido", 404
+
+    caminho = (
+        Path(pasta_resultados.name)
+        / identificador.hex
+        / arquivos[tipo]
+    )
+
+    if not caminho.exists():
+        return "Arquivo não encontrado", 404
+
+    return send_file(
+        caminho,
+        as_attachment=True,
+        download_name=arquivos[tipo]
+    )
 
 def abrir_navegador():
     webbrowser.open("http://127.0.0.1:5000")
