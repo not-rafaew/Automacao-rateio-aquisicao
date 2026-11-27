@@ -17,6 +17,11 @@ from Condominios.SolLife.Sol_Life import extrair_sollife
 from Condominios.Sol_Engenho.Sol_Engenho import extrair_soldoengenho
 from Condominios.Aleixo.Aleixo import extrair_aleixo
 from Condominios.Conviva.Conviva import extrair_conviva
+from Condominios.Esplendor.Esplendor import extrair_esplendor
+from Condominios.Bougainvillea.Bougainvillea import extrair_bougainvillea
+from Condominios.Aurum.Aurum_OMA import extrair_aurum_oma
+from Condominios.Aurum.Aurum_OMA_NOOCR import extrair_aurum_oma_noocr
+from Condominios.Sapucaia.sapucaia import extrair_sapucaia
 
 from Exportacao.layout_revo import montar_layout_revo
 from Exportacao.validacao import gerar_validacao
@@ -37,7 +42,12 @@ extratores = {
     "sol_life": extrair_sollife,
     "sol_engenho": extrair_soldoengenho,
     "aleixo": extrair_aleixo,
-    "conviva": extrair_conviva
+    "conviva": extrair_conviva,
+    "esplendor": extrair_esplendor,
+    "bougainvillea": extrair_bougainvillea,
+    "aurum_oma": extrair_aurum_oma,
+    "aurum_oma_noocr": extrair_aurum_oma_noocr,
+    "sapucaia": extrair_sapucaia
 }
 
 @app.route("/", methods=["GET", "POST"])
