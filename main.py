@@ -13,13 +13,14 @@ from Condominios.Aleixo.Aleixo import extrair_aleixo
 from Condominios.Conviva.Conviva import extrair_conviva
 from Condominios.Esplendor.Esplendor import extrair_esplendor
 from Condominios.Bougainvillea.Bougainvillea import extrair_bougainvillea
+from Condominios.Sapucaia.sapucaia import extrair_sapucaia
 from Exportacao.salvar_excel import salvar_excel
 from Exportacao.layout_revo import montar_layout_revo
 from Exportacao.salvar_excel_aleixo import salvar_excel_aleixo
 from pathlib import Path
 
-caminho_pdf = r"C:\Users\guug0\Downloads\R054 boletos 1.PDF"
-df, totais_pdf = extrair_marechal(caminho_pdf)
+caminho_pdf = r"C:\Users\guug0\Downloads\r032 planilha de boletos.PDF"
+df, totais_pdf = extrair_sapucaia(caminho_pdf)
 
 df_revo = montar_layout_revo(
     df,
@@ -39,7 +40,7 @@ print("\nTOTAIS PDF:")
 print(totais_pdf)
 
 
-caminho_saida = Path("Dados") / "Saida" / "Marechal" / "Teste.xlsx"
+caminho_saida = Path("Dados") / "Saida" / "Sapucaia" / "Teste.xlsx"
 
 salvar_excel(
    df_revo,
